@@ -1,0 +1,43 @@
+// GENERATED FILE -- do not hand-edit. Source: .devcontainer/devcontainer.answers.json
+// generator: dev-container-config  schemaVersion: 1  content-hash: b975cfacc2266d664e5552ba4cc22f7af5dfdab95e68c79089fddc6e18009807
+{
+    "name": "DevContainer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "features": {},
+    "runArgs": [
+        "--security-opt", "no-new-privileges",
+        "--cap-drop", "ALL",
+        "--cap-add", "CHOWN",
+        "--cap-add", "SETUID",
+        "--cap-add", "SETGID",
+        "--cap-add", "DAC_OVERRIDE",
+        "--cap-add", "FOWNER",
+        "--add-host", "host.docker.internal:host-gateway"
+    ],
+    "remoteUser": "vscode",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "files.watcherExclude": {
+                    "**/*.lnk": true,
+                    "**/node_modules/**": true,
+                    "**/target/**": true,
+                    "**/.git/objects/**": true,
+                    "**/.git/subtree-cache/**": true
+                },
+                "files.exclude": {
+                    "**/*.lnk": true
+                },
+                "terminal.integrated.defaultProfile.linux": "bash"
+            },
+            "extensions": [
+                "saoudrizwan.claude-dev"
+            ]
+        }
+    }
+}

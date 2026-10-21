@@ -1,0 +1,17 @@
+# AI session kit
+.env
+docs/.auto-continue.log
+docs/.auto-continue.pid
+docs/.handoff-notifications.log
+.github/auto-continue-enabled
+
+# macOS
+.DS_Store
+
+# generate.sh conflict output — hand-edit detected; see README
+*.new
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~

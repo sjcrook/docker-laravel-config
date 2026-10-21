@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "external/ai-session-kit/scripts/check-handoff.sh",
+        "timeout": 15
+      }
+    ]
+  }
+}
