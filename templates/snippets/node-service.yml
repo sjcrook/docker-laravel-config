@@ -1,0 +1,11 @@
+    node:
+        image: node:20-alpine
+        working_dir: ${APP_CODE_PATH_CONTAINER}
+        volumes:
+            - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+        networks:
+            - sail
+        # Run a no-op by default so the container exits cleanly when used with
+        # `docker compose run --rm node npm run build` etc.
+        entrypoint: [""]
+        command: ["true"]

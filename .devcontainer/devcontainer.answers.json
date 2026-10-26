@@ -1,7 +1,27 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "name": "DevContainer",
   "remoteUser": "vscode",
+  "dockerfileBuild": {
+    "toolchains": {
+      "node": {
+        "version": "22"
+      }
+    }
+  },
+  "mounts": [
+    {
+      "source": "../../laravel_ipty/",
+      "target": "/workspace/data/laravel_ipty/",
+      "readonly": true
+    },
+    {
+      "source": "../../laravel_dac_formatter/",
+      "target": "/workspace/data/laravel_dac_formatter/",
+      "readonly": true
+    }
+  ],
+  "postCreateCommand": "npm install -g cline",
   "customizations": {
     "vscode": {
       "extensions": [

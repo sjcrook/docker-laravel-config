@@ -10,7 +10,8 @@ MESSAGE="${2:-}"
 LOG_FILE="docs/.handoff-notifications.log"
 
 # TODO: send $SUBJECT / $MESSAGE somewhere real, e.g.:
-#   set -a; [ -f .env ] && source .env; set +a
+#   # Only source .env if it is a trusted, shell-compatible file.
+#   if [ -f .env ]; then set -a; . ./.env; set +a; fi
 #   ./send-email-to-mailgun.sh "$SUBJECT" "$MESSAGE"
 
 echo "$(date -u +%FT%TZ) notify.sh stub called: $SUBJECT" >>"$LOG_FILE"

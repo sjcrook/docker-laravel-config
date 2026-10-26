@@ -15,3 +15,6 @@ docs/.handoff-notifications.log
 *.swp
 *.swo
 *~
+.cline/.active-role
+
+/misc/

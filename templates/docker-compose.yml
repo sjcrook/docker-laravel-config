@@ -1,0 +1,81 @@
+services:
+    pgadmin:
+        image: dpage/pgadmin4:latest
+        # Run as pgAdmin's non-root runtime UID/GID for safer defaults (matches container docs).
+        user: '5050:5050'
+        ports:
+            - "{{HOST_PGADMIN_PORT}}:80"
+        environment:
+            PGADMIN_DEFAULT_EMAIL: '${PGADMIN_DEFAULT_EMAIL}'
+            PGADMIN_DEFAULT_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD}'
+            PGADMIN_SETUP_EMAIL: '${PGADMIN_DEFAULT_EMAIL}'
+            PGADMIN_SETUP_PASSWORD: '${PGADMIN_DEFAULT_PASSWORD}'
+            # Binds session cookie usage to client IP context for added protection
+            PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'True'
+        volumes:
+            - pgadmin-data:/var/lib/pgadmin
+        depends_on:
+            - postgres
+        networks:
+            - sail
+    postgres:
+        image: 'postgres:18.4'
+        environment:
+            POSTGRES_DB: '${DB_DATABASE}'
+            POSTGRES_USER: '${DB_USERNAME}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            - 'sail-pgsql:/var/lib/postgresql'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - pg_isready -U $$POSTGRES_USER
+            interval: 10s
+            timeout: 5s
+            retries: 5
+    nginx:
+        build:
+            context: "./docker/nginx"
+        environment:
+            NGINX_SERVER_NAME: ${NGINX_SERVER_NAME}
+            NGINX_SERVER_ALIAS: ${NGINX_SERVER_ALIAS}
+        depends_on:
+            - php-fpm
+        volumes:
+            - ${NGINX_SSL_PATH}:/etc/nginx/ssl
+            - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+            - ${NGINX_HOST_LOG_PATH}:/var/log/nginx
+            - ${NGINX_SITES_PATH}:/etc/nginx/sites-available
+        ports:
+            - "{{HOST_HTTPS_PORT}}:443"
+            - "{{HOST_HTTP_PORT}}:80"
+        networks:
+            - sail
+    php-fpm:
+        build:
+            context: "./docker/php-fpm"
+        working_dir: /var/www/laravel/current
+        ports:
+            - "{{HOST_SSH_PORT}}:22"
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        volumes:
+            - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+            - ${PHP_FPM_HOST_LOG_PATH}:/var/log
+        environment:
+            XDEBUG_MODE: 'debug' # 'debug' for debug, '' for disabled, can contain commas
+            RUN_CRON: 'no'
+            OPCACHE_ENABLE_CLI: 0 # 0 or 1 (0 - should allow Tinkerwell to see latest files, 1 is enabled)
+        networks:
+            - sail
+{{NODE_SERVICE_BLOCK}}
+networks:
+    sail:
+        driver: bridge
+volumes:
+    pgadmin-data:
+        driver: local
+    sail-pgsql:
+        driver: local

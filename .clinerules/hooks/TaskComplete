@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Thin wrapper — Cline requires hooks to be actual executable files at this
+# exact name/location. Real logic is vendored and read-only; see
+# external/ai-session-kit/scripts/check-handoff-cline.sh.
+#
+# Registered alongside TaskCancel and SessionShutdown: which one fires depends
+# on the surface and how the session ended (confirmed empirically) — this one
+# fires on normal completion, on both the CLI and the VS Code extension. A
+# near-identical copy also lives at .cline/hooks/TaskComplete.sh (with
+# extension) for the Cline CLI, which doesn't discover hooks from this
+# directory.
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/external/ai-session-kit/scripts/check-handoff-cline.sh"

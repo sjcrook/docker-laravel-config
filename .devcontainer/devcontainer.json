@@ -1,5 +1,5 @@
 // GENERATED FILE -- do not hand-edit. Source: .devcontainer/devcontainer.answers.json
-// generator: dev-container-config  schemaVersion: 1  content-hash: b975cfacc2266d664e5552ba4cc22f7af5dfdab95e68c79089fddc6e18009807
+// generator: dev-container-config  schemaVersion: 2  content-hash: 1b000a64c31af097448d0ee90bc88fbe7b7e10ed511af6d80ed78e471589dd21
 {
     "name": "DevContainer",
     "build": {
@@ -8,7 +8,12 @@
     },
     "workspaceFolder": "/workspace",
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+    "initializeCommand": "mkdir -p '${localWorkspaceFolder}/../../laravel_ipty/' && mkdir -p '${localWorkspaceFolder}/../../laravel_dac_formatter/'",
     "features": {},
+    "mounts": [
+        "source=${localWorkspaceFolder}/../../laravel_ipty/,target=/workspace/data/laravel_ipty/,type=bind,readonly",
+        "source=${localWorkspaceFolder}/../../laravel_dac_formatter/,target=/workspace/data/laravel_dac_formatter/,type=bind,readonly"
+    ],
     "runArgs": [
         "--security-opt", "no-new-privileges",
         "--cap-drop", "ALL",
@@ -20,6 +25,7 @@
         "--add-host", "host.docker.internal:host-gateway"
     ],
     "remoteUser": "vscode",
+    "postCreateCommand": "npm install -g cline",
     "customizations": {
         "vscode": {
             "settings": {

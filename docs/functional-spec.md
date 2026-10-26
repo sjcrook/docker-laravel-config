@@ -77,6 +77,7 @@ docker-laravel-config/
 │       └── php-fpm/
 │           ├── Dockerfile           # Template — PHP_VERSION, PG_CLIENT_VERSION tokens
 │           ├── laravel.ini          # Template — MEMORY_LIMIT, UPLOAD_MAX_FILESIZE, etc.
+│           ├── php-fpm-pool.conf    # Invariant — [www] pool overrides (pm.*), installed as php-fpm.d/zz-laravel.conf
 │           └── docker-entrypoint.sh # Invariant
 ├── examples/
 │   ├── minimal.answers.json         # Bare-minimum answers (good starting point)
@@ -306,6 +307,7 @@ relative to the **consuming project root** (i.e. `--out-dir`, which defaults to 
 | `docker/nginx/ssl/generate-keys.sh` | `templates/docker/nginx/ssl/generate-keys.sh` | no | Host-side mkcert wrapper |
 | `docker/php-fpm/Dockerfile` | `templates/docker/php-fpm/Dockerfile` | yes | `{{PHP_VERSION}}`, `{{PG_CLIENT_VERSION}}`, `{{NODE_APT_BLOCK}}` |
 | `docker/php-fpm/laravel.ini` | `templates/docker/php-fpm/laravel.ini` | yes | `{{MEMORY_LIMIT}}`, `{{UPLOAD_MAX_FILESIZE}}`, `{{POST_MAX_SIZE}}`, `{{TIMEZONE}}` |
+| `docker/php-fpm/php-fpm-pool.conf` | `templates/docker/php-fpm/php-fpm-pool.conf` | no | Invariant — php-fpm pool overrides; header-less (`;` comments only) |
 | `docker/php-fpm/docker-entrypoint.sh` | `templates/docker/php-fpm/docker-entrypoint.sh` | no | Invariant |
 | `docker/logs/nginx/.gitkeep` | (created empty) | no | Ensures log directory is tracked in git |
 | `docker/logs/php-fpm/.gitkeep` | (created empty) | no | Ensures log directory is tracked in git |
@@ -427,8 +429,19 @@ Identical between both projects. Canonical content is current. Key characteristi
 - Base image: `nginx:alpine`
 - Installs: `logrotate`, `openssl`, `bash`, `curl`
 - Creates `www-data` group/user (GID/UID 82)
-- Injects upstream `php-upstream` conf and removes default conf
+- Injects upstream `php-upstream` conf (`ARG PHP_UPSTREAM_CONTAINER=php-fpm`,
+  `ARG PHP_UPSTREAM_PORT=9000`) and removes default conf
 - Calls `startup.sh` as the CMD
+- Exposes only `80` and `443` (the references also exposed an unused `81`)
+- Does not mask `addgroup`/`adduser` errors (`|| true` / `2>/dev/null`); only creates
+  `www-data` when missing
+
+**`nginx.conf` (deliberately modernised, not copied):** TLS 1.2 + 1.3 only (the references
+enabled TLS 1.0/1.1, deprecated by RFC 8996, plus a CBC/3DES cipher list), ECDHE AEAD ciphers
+only (Mozilla "intermediate" trimmed — no DHE, so no dhparam file), session tickets off,
+`server_tokens off`, gzip, `client_max_body_size 0` (PHP's `upload_max_filesize`/`post_max_size`
+are the single source of truth), `user www-data`. No HSTS header is sent — browsers cache it
+per host, which is a footgun for local dev domains.
 
 ### 8.3 `docker/nginx/startup.sh`
 
@@ -450,7 +463,21 @@ Identical between both projects. Canonical content is current. Key characteristi
   ```
 
   The `2>/dev/null` suppresses the "no crontab for root" error that occurs on first run
-  when no crontab exists yet.
+  when no crontab exists yet. Any previous `nginx -s reload` entry is removed first, so
+  container restarts do not accumulate duplicate entries.
+
+**Improvements over both reference projects (deliberate, not copied):**
+
+- `envsubst` renders `sites-available/*.conf` into a container-local `sites-enabled/`, and
+  `nginx.conf` includes `sites-enabled/*.conf`. The references render *in place*, but
+  `sites-available/` is a writable bind mount of the host's `docker/nginx/sites/`, so the
+  host file is permanently overwritten with the literal domain and later `.env` changes
+  never take effect.
+- Fallback cert is EC P-256 with SANs for the domain, **each** alias (the reference put the
+  whole space-separated alias string in one `DNS:` entry), `localhost`, `127.0.0.1`, `::1`;
+  it is also regenerated if only one of cert/key exists. No hardcoded org/location in the subject.
+- Fails fast if `NGINX_SERVER_NAME` is unset; runs `nginx -t` before starting; `exec nginx`
+  so nginx is PID 1 and handles `docker compose down` signals.
 
 **Note:** This cron runs inside the **nginx container** and reloads nginx only. It is entirely
 separate from the Laravel scheduler cron in the `php-fpm` container (see §8.8).
@@ -470,6 +497,14 @@ server_name ${NGINX_SERVER_NAME} ${NGINX_SERVER_ALIAS};
 
 This makes the file truly generic — `generate.sh` copies it verbatim and `startup.sh`
 handles the per-project domain at runtime via the project's `.env`.
+
+**Modernised relative to the references:** `http2 on;` (the `listen … http2` parameter is
+deprecated since nginx 1.25.1); only `index.php` is passed to PHP via
+`location ~ ^/index\.php(/|$)` with `$realpath_root` (the references' catch-all
+`location ~ \.php$` would execute any uploaded `.php` file); dotfiles denied except
+`.well-known`; `fastcgi_hide_header X-Powered-By`; `try_files … /index.php?$query_string`
+and `error_page 404 /index.php` per the Laravel deployment docs; the references' production
+Let's Encrypt webroot block is dropped (this framework is local-dev only).
 
 **Known divergence in `laravel_ipty`:** `laravel.conf` still has the literal domain name
 `ipresenttoyou.com` in `server_name`. The `startup.sh` envsubst logic is correct but the
@@ -554,6 +589,31 @@ container start when `XDEBUG_MODE` is set. This means a container running with
 `buster` for the ngrok repo; installs all extensions in a single `docker-php-ext-install`
 call (including `opcache`); missing `pecl config-set` before `pecl install xdebug`.
 
+**Deliberate departures from both reference Dockerfiles (T08):**
+
+- **No hardcoded Debian suite for PGDG.** The unqualified `php:X.Y-fpm` tag now resolves to
+  Debian *trixie* (docker-library/php `versions.json` lists both `trixie` and `bookworm`
+  variants), so the references' `bookworm-pgdg` would pair trixie packages with bookworm
+  PGDG packages. The suite is read from `/etc/os-release` (`VERSION_CODENAME`) at build time.
+- **The references' `debian.sources` "hash mismatch" patch is dropped.** It appended a
+  hardcoded `bookworm` suite stanza, which on a trixie base mixes two Debian releases in
+  apt. Only the `99fixbadproxy` apt option file is kept (written with `printf`, since
+  `echo "\n"` does not interpret `\n` under `/bin/sh`).
+- **ngrok stays on the `bookworm` suite** (as the AC requires): ngrok publishes one
+  universal repo, so the codename is not tied to the base image.
+- **xdebug is genuinely inactive after build.** `pecl install` writes a `zend_extension`
+  line into the file named by `pecl config-set php_ini`; that file is deleted in the same
+  `RUN` so the "zero overhead until `XDEBUG_MODE` is set" promise above holds.
+  (`laravel_dac_formatter` ran `docker-php-ext-enable xdebug` at build, so xdebug was always on.)
+- **sshd settings go in `/etc/ssh/sshd_config.d/10-laravel-dev.conf`.** The references
+  edited `/etc/ssh/ssh_config` (the *client* config), which has no effect on the server.
+- `laravel.ini` and `docker-entrypoint.sh` use `COPY` (not `ADD`); the entrypoint is copied
+  once to `/usr/local/bin/` with CRs stripped, without the redundant symlink at `/`.
+
+`generate-keys.sh` (§8.5) differs from `laravel_ipty` only in that it propagates a failing
+`mkcert` exit status (instead of chmod-ing a nonexistent key and printing "Done."), does not
+print a stray trailing comma when no aliases are given, and uses generic example domains.
+
 ### 8.7 `docker/php-fpm/laravel.ini`
 
 **Template variables:** `{{MEMORY_LIMIT}}`, `{{UPLOAD_MAX_FILESIZE}}`, `{{POST_MAX_SIZE}}`,
@@ -572,11 +632,6 @@ memory_limit = {{MEMORY_LIMIT}}
 upload_max_filesize = {{UPLOAD_MAX_FILESIZE}}
 ; Sets max size of post data allowed
 post_max_size = {{POST_MAX_SIZE}}
-
-pm = ondemand
-pm.max_children = 5
-pm.process_idle_timeout = 10s
-request_terminate_timeout = 60s
 
 ; OPcache settings
 opcache.enable=1
@@ -600,6 +655,17 @@ opcache.revalidate_freq=2
 opcache.jit=tracing
 opcache.jit_buffer_size=0
 ```
+
+**Pool directives live elsewhere:** `pm = ondemand`, `pm.max_children = 5`,
+`pm.process_idle_timeout = 10s` and `request_terminate_timeout = 60s` are php-fpm *pool*
+settings and are not valid in a `conf.d` php.ini-style file (they were inert there). They are
+in the invariant `docker/php-fpm/php-fpm-pool.conf` (`[www]` section), which the Dockerfile
+copies to `/usr/local/etc/php-fpm.d/zz-laravel.conf` so it loads after the base image's
+`zz-docker.conf`.
+
+**Generated-file header:** because `laravel.ini` is a PHP ini file (PHP 7+ rejects `#`
+comments), `write_header()` emits `;` instead of `#` for `*.ini` files; `check_hand_edit()`
+reads the hash from line 2 regardless of comment character.
 
 **Default limits (higher than `laravel_ipty`, aligned with `laravel_dac_formatter`):**
 `memory_limit=256M`, `upload_max_filesize=64M`, `post_max_size=64M`. Adjust via the answers
@@ -654,6 +720,7 @@ fi
 #
 # OPCACHE_ENABLE_CLI=1 (set in docker-compose.yml for queue worker performance testing):
 #   CLI opcache enabled; do not use when interactively editing code during the same session.
+sed -i '/^opcache\.enable_cli=/d' /usr/local/etc/php/conf.d/laravel.ini
 echo "opcache.enable_cli=$OPCACHE_ENABLE_CLI" >> /usr/local/etc/php/conf.d/laravel.ini
 
 # Start the SSH server so that Tinkerwell can connect.
@@ -661,6 +728,9 @@ echo "opcache.enable_cli=$OPCACHE_ENABLE_CLI" >> /usr/local/etc/php/conf.d/larav
 
 exec "$@"
 ```
+
+**Restart-safe:** the `sed -i` deletes any line a previous start of the same container
+already appended, so `docker restart` does not accumulate duplicate lines.
 
 **The `opcache.enable_cli` injection mechanism explained:**
 

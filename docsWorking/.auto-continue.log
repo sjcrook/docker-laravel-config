@@ -1,0 +1,3 @@
+2026-10-22T14:55:50Z auto-continue: stopping — no supported CLI found (looked for 'copilot' and 'cline'; resolved CLI='')
+2026-10-23T12:12:18Z auto-continue: started (max 3 iterations, cli=cline)
+2026-10-23T12:12:18Z auto-continue: stopping — no unchecked tasks remain
