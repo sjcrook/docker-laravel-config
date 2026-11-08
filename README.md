@@ -21,7 +21,7 @@ From the root of your Laravel project:
 
 ```bash
 git submodule add git@github.com:sjcrook/docker-laravel-config.git external/docker-laravel-config
-git submodule update --init --recursive
+git submodule update --init
 ```
 
 A fresh clone of a project that already uses the submodule needs
