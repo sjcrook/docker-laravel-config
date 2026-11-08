@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "phpVersion": "8.5",
+  "pgClientVersion": 18,
+  "domain": "myapp.local"
+}

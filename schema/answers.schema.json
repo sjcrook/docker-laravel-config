@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "docker-laravel-config answers file",
+  "description": "Schema for docker.answers.json. For IDE autocomplete only; generate.sh implements its own validation.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "description": "Must be 1 for this version of the generator.",
+      "const": 1
+    },
+    "phpVersion": {
+      "description": "PHP-FPM Docker Hub image tag, e.g. \"8.2\", \"8.5\".",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"
+    },
+    "pgClientVersion": {
+      "description": "Installs postgresql-client-<N> via apt in the php-fpm container.",
+      "type": "integer",
+      "minimum": 14,
+      "default": 18
+    },
+    "domain": {
+      "description": "Primary domain; used for nginx server_name and SSL cert CN/SAN.",
+      "type": "string",
+      "minLength": 1
+    },
+    "domainAliases": {
+      "description": "Space-separated additional names for server_name and SSL SAN.",
+      "type": "string",
+      "default": ""
+    },
+    "memoryLimit": {
+      "description": "PHP memory_limit.",
+      "type": "string",
+      "pattern": "^[0-9]+[MG]$",
+      "default": "256M"
+    },
+    "uploadMaxFilesize": {
+      "description": "PHP upload_max_filesize.",
+      "type": "string",
+      "pattern": "^[0-9]+[MG]$",
+      "default": "64M"
+    },
+    "postMaxSize": {
+      "description": "PHP post_max_size.",
+      "type": "string",
+      "pattern": "^[0-9]+[MG]$",
+      "default": "64M"
+    },
+    "timezone": {
+      "description": "PHP date.timezone.",
+      "type": "string",
+      "default": "America/New_York"
+    },
+    "phpFpmIncludeNode": {
+      "description": "Install nodejs and npm inside the php-fpm container.",
+      "type": "boolean",
+      "default": false
+    },
+    "nodeServiceBlock": {
+      "description": "\"none\", \"builtin\", or a path (relative to the project root) to a custom YAML block file.",
+      "type": "string",
+      "default": "none"
+    },
+    "hostHttpPort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535,
+      "default": 80
+    },
+    "hostHttpsPort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535,
+      "default": 443
+    },
+    "hostSshPort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535,
+      "default": 2222
+    },
+    "hostPgAdminPort": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 65535,
+      "default": 8081
+    }
+  },
+  "required": ["schemaVersion", "phpVersion", "pgClientVersion", "domain"]
+}

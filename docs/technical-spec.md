@@ -45,6 +45,7 @@ generate.sh
 ├── check_hand_edit()      — compare stored hash vs current file; write .new on mismatch
 ├── commit_staged()        — move staging files to OUT_DIR; chmod executables
 ├── save_answers()         — write docker.answers.json via jq -n
+├── append_gitignore()     — append missing lines from templates/gitignore.append to OUT_DIR/.gitignore
 ├── print_env_fragment()   — emit .env block + DB/PGADMIN reminder to stdout
 ├── print_summary()        — list every file written
 └── main()                 — top-level orchestration
@@ -77,7 +78,7 @@ declare -A ANSWERS
 | Flag | Argument | Effect |
 |---|---|---|
 | `--answers` | `<file>` | Path to existing `docker.answers.json`; skips prompts |
-| `--out-dir` | `<dir>` | Output directory (default: `$(pwd)`) |
+| `--out-dir` | `<dir>` | Output directory (default: `$(pwd)`). Created with `mkdir -p` (including parents) by `main()` right after `parse_args` if it does not exist; if it cannot be created, exits 1 with `ERROR: cannot create output directory: <dir>`. `--help` and argument errors do not create it. |
 | `--force` | — | Skip hand-edit check; always overwrite generated files |
 
 Unrecognised flags print usage and exit 1.
@@ -490,9 +491,16 @@ EOF
 16. save_answers OUT_DIR
 17. commit_staged STAGE_DIR OUT_DIR
 18. rm -rf STAGE_DIR
-19. print_env_fragment
-20. print_summary
+19. append_gitignore OUT_DIR
+20. print_env_fragment
+21. print_summary
 ```
+
+`append_gitignore <out_dir>` creates `<out_dir>/.gitignore` if absent, then appends each line of
+`templates/gitignore.append` that is not already present (whole-line, fixed-string match). It is
+idempotent, never removes or reorders existing lines, adds no header, and prints
+`  .gitignore: N line(s) appended` only when N is greater than 0. If the template file is missing it
+does nothing. A normal run therefore writes 17 files (functional-spec §6).
 
 ---
 
@@ -631,7 +639,7 @@ Uses `perl -0777 -pe` (no python3 dependency) · single token replaced · all 10
 
 Subprocess: `./generate.sh --answers examples/minimal.answers.json --out-dir "$TEST_OUT"`
 
-Exits 0 · all 16 output paths exist · `docker.answers.json` is valid JSON · defaults applied (`memoryLimit=256M`, default ports) · generated files have two-line header · invariant files have no header · `sail` and `generate-keys.sh` are executable · `.gitkeep` files exist and are empty · stdout contains `NGINX_SERVER_NAME=myapp.local` · stdout contains DB `NOTE:` reminder.
+Exits 0 · all 17 output paths exist (the 16 in functional-spec §6 plus the root `.gitignore`) · `docker.answers.json` is valid JSON · defaults applied (`memoryLimit=256M`, default ports) · generated files have two-line header · invariant files have no header · `sail` and `generate-keys.sh` are executable · `.gitkeep` files exist and are empty · stdout contains `NGINX_SERVER_NAME=myapp.local` · stdout contains DB `NOTE:` reminder.
 
 ### Integration: `full.bats`
 

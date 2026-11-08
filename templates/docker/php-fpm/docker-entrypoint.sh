@@ -34,7 +34,7 @@ fi
 #
 # OPCACHE_ENABLE_CLI=1 (set in docker-compose.yml for queue worker performance testing):
 #   CLI opcache enabled; do not use when interactively editing code during the same session.
-sed -i '/^opcache\.enable_cli=/d' /usr/local/etc/php/conf.d/laravel.ini
+perl -i -ne 'print unless /^opcache\.enable_cli=/' /usr/local/etc/php/conf.d/laravel.ini
 echo "opcache.enable_cli=$OPCACHE_ENABLE_CLI" >> /usr/local/etc/php/conf.d/laravel.ini
 
 # Start the SSH server so that Tinkerwell can connect.

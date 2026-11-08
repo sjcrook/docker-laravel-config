@@ -21,7 +21,7 @@ shift
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-MKCERT="$(command -v mkcert || command -v /opt/homebrew/bin/mkcert || true)"
+MKCERT="$(command -v mkcert 2>/dev/null || true)"
 if [ -z "$MKCERT" ]; then
     echo "ERROR: mkcert not found. Install it (e.g. 'brew install mkcert') and run 'mkcert -install' once."
     exit 1

@@ -21,6 +21,7 @@ ARG PHP_UPSTREAM_PORT=9000
 RUN touch /var/log/messages
 
 COPY logrotate/nginx /etc/logrotate.d/nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Upstream definition referenced by `fastcgi_pass php-upstream;` in sites/laravel.conf.
 # Remove the stock default site so only the project's conf is served.

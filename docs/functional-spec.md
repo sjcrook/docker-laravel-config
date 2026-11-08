@@ -60,6 +60,7 @@ docker-laravel-config/
 │   ├── docker-compose.yml           # Template — tokens substituted at generation time
 │   ├── env.docker                   # Template — the Docker-specific .env block (to append)
 │   ├── sail                         # Invariant — the php-fpm exec wrapper script
+│   ├── gitignore.append             # Lines appended (idempotently) to the consuming project's root .gitignore
 │   ├── snippets/
 │   │   └── node-service.yml         # The built-in node service YAML block (optional inclusion)
 │   └── docker/
@@ -311,6 +312,9 @@ relative to the **consuming project root** (i.e. `--out-dir`, which defaults to 
 | `docker/php-fpm/docker-entrypoint.sh` | `templates/docker/php-fpm/docker-entrypoint.sh` | no | Invariant |
 | `docker/logs/nginx/.gitkeep` | (created empty) | no | Ensures log directory is tracked in git |
 | `docker/logs/php-fpm/.gitkeep` | (created empty) | no | Ensures log directory is tracked in git |
+| `.gitignore` | `templates/gitignore.append` | no | Appended, not overwritten: created if absent; only lines missing from the existing file are added, so the run is idempotent and the project's own entries are preserved. No generated header, no hand-edit check, never a `.new` file. Ignores runtime logs (keeping the `.gitkeep` files) and generated TLS files. |
+
+A normal run therefore writes **17 files**: the 16 generated or copied paths above plus the root `.gitignore`.
 
 Additionally, a **`.env` fragment** is printed to stdout (and optionally appended with
 `--append-env`) containing the Docker-specific variables that must be present in the
@@ -894,6 +898,7 @@ canonical templates, and delete the `.new` files.
 | `docker/php-fpm/**` | yes | Generated/copied — do not hand-edit |
 | `docker/logs/nginx/.gitkeep` | yes | Ensures the log directory exists |
 | `docker/logs/php-fpm/.gitkeep` | yes | Ensures the log directory exists |
+| `.gitignore` | yes | The project's own file; the generator only appends missing lines from `templates/gitignore.append` |
 | `docker/nginx/ssl/default.crt` | **no** | Excluded by `docker/nginx/ssl/.gitignore` |
 | `docker/nginx/ssl/default.key` | **no** | Excluded by `docker/nginx/ssl/.gitignore` |
 

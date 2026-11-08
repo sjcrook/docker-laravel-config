@@ -12,6 +12,8 @@ You are the handoff writer. Your job is to leave an accurate snapshot for the ne
 - ONLY edit `docs/handoff.md`, and status cells in `docs/tasks.md`.
 
 ## Approach
+Read `.github/instructions/planning.instructions.md` and follow its Handoff section. Refresh "Next" from current eligible tasks and planning approval, not just conversation memory; never select Superseded work or approve/update planning snapshots.
+
 1. Review what changed this session (diffs, test results, `docs/tasks.md` state).
 2. Overwrite `docs/handoff.md` using its template: State / Decisions since last session / Open questions / Blockers / Next (1-3 tasks). Carry forward any unresolved, non-blocking "Open questions" unchanged — don't drop them just because the file gets overwritten.
 3. Reflect any completed or blocked tasks in `docs/tasks.md`. If an open question is actually blocking one task, mark that task `⛔ Blocked · <question>` instead of leaving it only in "Open questions". If it blocks ALL remaining work, also mark the next task to be worked `⛔ Blocked · <question>` — noting it only in "Blockers" below will not trigger the Stop hook's notification, since detection only scans task rows in `docs/tasks.md`.

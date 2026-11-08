@@ -8,6 +8,8 @@ Before anything else, write the exact text `none` (no trailing newline) to
 unrestricted workflow doesn't inherit a planner/handoff-writer restriction a
 previous task may have left behind.
 
-Interview the developer for anything missing, then write/update
-`docs/functional-spec.md` following its existing template. Do not touch
-`docs/technical-spec.md`, `docs/tasks.md`, or `docs/handoff.md`.
+Read `.github/instructions/planning.instructions.md` and follow its Functional
+specification section. Interview for missing behavior, then update the existing
+`docs/functional-spec.md`, preserving unrelated requirements and following its
+existing template. Do not touch `docs/technical-spec.md`, `docs/tasks.md`,
+`docs/handoff.md`, or `docs/planning/`.

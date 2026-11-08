@@ -8,13 +8,13 @@ setup() {
 }
 
 tokens_in() {
-    grep -oE '\{\{[A-Z_]+\}\}' "$1" | sort -u
+    grep -oE '\{\{[A-Z_]+\}\}' "$1" | LC_ALL=C sort -u
 }
 
 # ---- T11: docker-compose.yml -------------------------------------------------
 
 @test "compose: uses exactly the five tokens" {
-    [ "$(tokens_in "$COMPOSE")" = "$(printf '{{HOST_HTTP_PORT}}\n{{HOST_HTTPS_PORT}}\n{{HOST_PGADMIN_PORT}}\n{{HOST_SSH_PORT}}\n{{NODE_SERVICE_BLOCK}}')" ]
+    [ "$(tokens_in "$COMPOSE")" = "$(printf '{{HOST_HTTPS_PORT}}\n{{HOST_HTTP_PORT}}\n{{HOST_PGADMIN_PORT}}\n{{HOST_SSH_PORT}}\n{{NODE_SERVICE_BLOCK}}')" ]
 }
 
 @test "compose: has pgadmin, postgres, nginx and php-fpm services" {

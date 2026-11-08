@@ -1,9 +1,9 @@
 # AI session kit
 .env
-docs/.auto-continue.log
-docs/.auto-continue.pid
-docs/.handoff-notifications.log
 .github/auto-continue-enabled
+.cline/.active-role
+/.ai-session/
+/command-exceptions/
 
 # macOS
 .DS_Store
@@ -15,6 +15,6 @@ docs/.handoff-notifications.log
 *.swp
 *.swo
 *~
-.cline/.active-role
 
 /misc/
+/data/

@@ -1,4 +1,4 @@
-# GENERATED FILE -- do not hand-edit. Source: .devcontainer/devcontainer.answers.json
+# GENERATED FILE -- do not hand-edit. Source: ./.devcontainer/devcontainer.answers.json
 # generator: dev-container-config  schemaVersion: 2  content-hash: 149ab78903f1e05365ccaec34f63f918b7ffe597e78b184a18e7ac6b9e1d6bfa
 
 # Base image standardized across all projects generated from this submodule.

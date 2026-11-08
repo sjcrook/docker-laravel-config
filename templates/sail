@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# Run commands inside the php-fpm container.
+# Usage examples:
+#   ./sail php artisan migrate
+#   ./sail php artisan tinker
+#   ./sail composer require vendor/package
+#   ./sail php artisan queue:work
+
+# Derive the container name from the current directory name (Docker Compose project name).
+# basename "$PWD" is POSIX-portable (works on bash, zsh, Linux, macOS, Git Bash, WSL).
+CONTAINER_NAME="$(basename "$PWD")-php-fpm-1"
+
+docker exec -i -w /var/www/laravel/current "$CONTAINER_NAME" \
+  bash -c 'set -x; exec "$@"' dummy "$@"

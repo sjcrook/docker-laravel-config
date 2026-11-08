@@ -23,6 +23,11 @@ next session.
 - ONLY edit `docs/handoff.md`, and status cells in `docs/tasks.md`.
 
 ## Approach
+Read `.github/instructions/planning.instructions.md` and follow its Handoff
+section. Refresh "Next" from current eligible tasks and planning approval, not
+just conversation memory; never select Superseded work or approve/update planning
+snapshots.
+
 1. Review what changed this session (diffs, test results, `docs/tasks.md`
    state).
 2. Overwrite `docs/handoff.md` using its template: State / Decisions since

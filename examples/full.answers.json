@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "phpVersion": "8.5",
+  "pgClientVersion": 18,
+  "domain": "myapp.com",
+  "domainAliases": "www.myapp.com test.myapp.com",
+  "memoryLimit": "256M",
+  "uploadMaxFilesize": "64M",
+  "postMaxSize": "64M",
+  "timezone": "America/New_York",
+  "phpFpmIncludeNode": false,
+  "nodeServiceBlock": "builtin",
+  "hostHttpPort": 80,
+  "hostHttpsPort": 443,
+  "hostSshPort": 2222,
+  "hostPgAdminPort": 8081
+}

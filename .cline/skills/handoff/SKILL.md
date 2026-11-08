@@ -9,6 +9,10 @@ so the project's `PreToolUse` hook enforces the handoff-writer role's
 restrictions for the rest of this task (no shell commands). This also clears
 any role a previous task may have left behind.
 
+Read `.github/instructions/planning.instructions.md` and follow its Handoff
+section. Refresh "Next" from current eligible tasks and planning approval; never
+select Superseded work or approve/update planning snapshots.
+
 Summarize this session and update `docs/handoff.md` using its template
 (State / Decisions since last session / Open questions / Blockers / Next),
 carrying forward unresolved non-blocking "Open questions" unchanged. Update

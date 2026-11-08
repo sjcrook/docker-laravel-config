@@ -7,12 +7,20 @@ set -uo pipefail
 
 SUBJECT="${1:-Coding session blocked}"
 MESSAGE="${2:-}"
-LOG_FILE="docs/.handoff-notifications.log"
+LOG_FILE=".ai-session/handoff-notifications.log"
+
+if ! mkdir -p .ai-session; then
+  echo "Cannot create .ai-session runtime directory for notifications." >&2
+  exit 1
+fi
 
 # TODO: send $SUBJECT / $MESSAGE somewhere real, e.g.:
 #   # Only source .env if it is a trusted, shell-compatible file.
 #   if [ -f .env ]; then set -a; . ./.env; set +a; fi
 #   ./send-email-to-mailgun.sh "$SUBJECT" "$MESSAGE"
 
-echo "$(date -u +%FT%TZ) notify.sh stub called: $SUBJECT" >>"$LOG_FILE"
+if ! echo "$(date -u +%FT%TZ) notify.sh stub called: $SUBJECT" >>"$LOG_FILE"; then
+  echo "Cannot write notification log $LOG_FILE." >&2
+  exit 1
+fi
 exit 0

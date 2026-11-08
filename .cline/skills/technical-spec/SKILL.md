@@ -8,11 +8,15 @@ Before anything else, write the exact text `none` (no trailing newline) to
 unrestricted workflow doesn't inherit a planner/handoff-writer restriction a
 previous task may have left behind.
 
-Read `docs/functional-spec.md`. Interview the developer for anything
-missing, then write/update `docs/technical-spec.md` following its existing
-template. If the project has a UI, also ask about the frontend framework and
-tooling, and write/update both `.github/instructions/frontend.instructions.md`
+Read `.github/instructions/planning.instructions.md` and follow its Technical
+specification section. Read the entire current functional spec, existing
+technical spec, and available approved baseline; discover affected code/tests
+yourself. Interview for missing design decisions, then update
+`docs/technical-spec.md` following its existing template. If the project has a
+UI, ask about missing frontend framework/tooling decisions and write/update both
+`.github/instructions/frontend.instructions.md`
 (Copilot conventions plus a correct `applyTo` glob) and
 `.clinerules/frontend.md` (the same conventions plus a correct `paths` glob in
 YAML frontmatter) — these are the one exception to only touching the spec. Do
-not touch `docs/functional-spec.md`, `docs/tasks.md`, or `docs/handoff.md`.
+not touch `docs/functional-spec.md`, `docs/tasks.md`, `docs/handoff.md`, or
+`docs/planning/`. Do not run shell commands or implement code.

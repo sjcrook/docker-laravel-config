@@ -1,5 +1,5 @@
-// GENERATED FILE -- do not hand-edit. Source: .devcontainer/devcontainer.answers.json
-// generator: dev-container-config  schemaVersion: 2  content-hash: 1b000a64c31af097448d0ee90bc88fbe7b7e10ed511af6d80ed78e471589dd21
+// GENERATED FILE -- do not hand-edit. Source: ./.devcontainer/devcontainer.answers.json
+// generator: dev-container-config  schemaVersion: 2  content-hash: 52c23160f1f5f7578baa951d7c58368d11b6fafe5af449518c6a6f25ee87c159
 {
     "name": "DevContainer",
     "build": {
@@ -8,11 +8,22 @@
     },
     "workspaceFolder": "/workspace",
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-    "initializeCommand": "mkdir -p '${localWorkspaceFolder}/../../laravel_ipty/' && mkdir -p '${localWorkspaceFolder}/../../laravel_dac_formatter/'",
+    "initializeCommand": "[ -e '${localWorkspaceFolder}/command-exceptions' ] || mkdir -p '${localWorkspaceFolder}/command-exceptions' && [ -e '${localWorkspaceFolder}/external' ] || mkdir -p '${localWorkspaceFolder}/external' && [ -e '${localWorkspaceFolder}/.git/modules' ] || mkdir -p '${localWorkspaceFolder}/.git/modules' && [ -e '${localWorkspaceFolder}/.devcontainer' ] || mkdir -p '${localWorkspaceFolder}/.devcontainer' && [ -e '${localWorkspaceFolder}/.cline/hooks' ] || mkdir -p '${localWorkspaceFolder}/.cline/hooks' && [ -e '${localWorkspaceFolder}/.clinerules/hooks' ] || mkdir -p '${localWorkspaceFolder}/.clinerules/hooks' && [ -e '${localWorkspaceFolder}/.github/hooks' ] || mkdir -p '${localWorkspaceFolder}/.github/hooks' && [ -e '${localWorkspaceFolder}/.cline/skills' ] || mkdir -p '${localWorkspaceFolder}/.cline/skills' && [ -e '${localWorkspaceFolder}/.github/agents' ] || mkdir -p '${localWorkspaceFolder}/.github/agents' && [ -e '${localWorkspaceFolder}/.github/prompts' ] || mkdir -p '${localWorkspaceFolder}/.github/prompts' && [ -e '${localWorkspaceFolder}/AGENTS.md' ] || mkdir -p '${localWorkspaceFolder}/AGENTS.md' && [ -e '${localWorkspaceFolder}/../../laravel_dac_formatter' ] || mkdir -p '${localWorkspaceFolder}/../../laravel_dac_formatter' && [ -e '${localWorkspaceFolder}/../../laravel_ipty' ] || mkdir -p '${localWorkspaceFolder}/../../laravel_ipty'",
     "features": {},
     "mounts": [
-        "source=${localWorkspaceFolder}/../../laravel_ipty/,target=/workspace/data/laravel_ipty/,type=bind,readonly",
-        "source=${localWorkspaceFolder}/../../laravel_dac_formatter/,target=/workspace/data/laravel_dac_formatter/,type=bind,readonly"
+        "source=${localWorkspaceFolder}/command-exceptions,target=/workspace/command-exceptions,type=bind,readonly",
+        "source=${localWorkspaceFolder}/external,target=/workspace/external,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.git/modules,target=/workspace/.git/modules,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.devcontainer,target=/workspace/.devcontainer,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.cline/hooks,target=/workspace/.cline/hooks,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.clinerules/hooks,target=/workspace/.clinerules/hooks,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.github/hooks,target=/workspace/.github/hooks,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.cline/skills,target=/workspace/.cline/skills,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.github/agents,target=/workspace/.github/agents,type=bind,readonly",
+        "source=${localWorkspaceFolder}/.github/prompts,target=/workspace/.github/prompts,type=bind,readonly",
+        "source=${localWorkspaceFolder}/AGENTS.md,target=/workspace/AGENTS.md,type=bind,readonly",
+        "source=${localWorkspaceFolder}/../../laravel_dac_formatter,target=/workspace/data/laravel_dac_formatter,type=bind,readonly",
+        "source=${localWorkspaceFolder}/../../laravel_ipty,target=/workspace/data/laravel_ipty,type=bind,readonly"
     ],
     "runArgs": [
         "--security-opt", "no-new-privileges",
@@ -25,7 +36,10 @@
         "--add-host", "host.docker.internal:host-gateway"
     ],
     "remoteUser": "vscode",
-    "postCreateCommand": "npm install -g cline",
+    "remoteEnv": {
+        "PATH": "${containerEnv:PATH}:${containerEnv:HOME}/.local/bin"
+    },
+    "postCreateCommand": "npm install --global --prefix $HOME/.local cline",
     "customizations": {
         "vscode": {
             "settings": {
