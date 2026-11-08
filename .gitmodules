@@ -1,6 +1,6 @@
 [submodule "external/ai-session-kit"]
 	path = external/ai-session-kit
-	url = git@github.com:sjcrook/ai-session-kit.git
+	url = https://github.com/sjcrook/ai-session-kit.git
 [submodule "external/dev-container-config"]
 	path = external/dev-container-config
-	url = git@github.com:sjcrook/dev-container-config.git
+	url = https://github.com/sjcrook/dev-container-config.git

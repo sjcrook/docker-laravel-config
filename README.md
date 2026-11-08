@@ -20,7 +20,7 @@ are out of scope (the `sail` script here is an unrelated `docker exec` wrapper).
 From the root of your Laravel project:
 
 ```bash
-git submodule add git@github.com:sjcrook/docker-laravel-config.git external/docker-laravel-config
+git submodule add <this-repo-url> external/docker-laravel-config
 git submodule update --init
 ```
 
