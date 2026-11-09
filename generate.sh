@@ -455,6 +455,8 @@ print_env_fragment() {
     (
         export TOKEN_HOST_HTTP_PORT="${ANSWERS[hostHttpPort]}"
         export TOKEN_HOST_HTTPS_PORT="${ANSWERS[hostHttpsPort]}"
+        export TOKEN_HOST_SSH_PORT="${ANSWERS[hostSshPort]}"
+        export TOKEN_HOST_PGADMIN_PORT="${ANSWERS[hostPgAdminPort]}"
         export TOKEN_NGINX_SERVER_NAME="${ANSWERS[domain]}"
         export TOKEN_NGINX_SERVER_ALIAS="${ANSWERS[domainAliases]}"
         render_template "${TEMPLATES_DIR}/env.docker" "$tmp"

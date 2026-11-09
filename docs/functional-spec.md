@@ -337,7 +337,11 @@ NGINX_SSL_PATH=./docker/nginx/ssl/
 NGINX_SERVER_NAME=<domain>
 NGINX_SERVER_ALIAS=<domainAliases>
 
+PHP_FPM_HOST_SSH_PORT=<hostSshPort>
 PHP_FPM_HOST_LOG_PATH=./docker/logs/php-fpm/
+
+##### PGADMIN
+PGADMIN_HOST_PORT=<hostPgAdminPort>
 ```
 
 After printing the fragment, the generator also prints the following reminder:
@@ -370,10 +374,10 @@ this framework. Ensure they are set correctly for your project:
 | `{{UPLOAD_MAX_FILESIZE}}` | `php-fpm/laravel.ini` | `uploadMaxFilesize` | `64M` |
 | `{{POST_MAX_SIZE}}` | `php-fpm/laravel.ini` | `postMaxSize` | `64M` |
 | `{{TIMEZONE}}` | `php-fpm/laravel.ini` | `timezone` | `America/New_York` |
-| `{{HOST_HTTP_PORT}}` | `docker-compose.yml` | `hostHttpPort` | `80` |
-| `{{HOST_HTTPS_PORT}}` | `docker-compose.yml` | `hostHttpsPort` | `443` |
-| `{{HOST_SSH_PORT}}` | `docker-compose.yml` | `hostSshPort` | `2222` |
-| `{{HOST_PGADMIN_PORT}}` | `docker-compose.yml` | `hostPgAdminPort` | `8081` |
+| `{{HOST_HTTP_PORT}}` | `env.docker` only | `hostHttpPort` | `80` — rendered into `.env` as `NGINX_HOST_HTTP_PORT`; compose uses `${NGINX_HOST_HTTP_PORT}` at runtime |
+| `{{HOST_HTTPS_PORT}}` | `env.docker` only | `hostHttpsPort` | `443` — rendered into `.env` as `NGINX_HOST_HTTPS_PORT`; compose uses `${NGINX_HOST_HTTPS_PORT}` at runtime |
+| `{{HOST_SSH_PORT}}` | `env.docker` only | `hostSshPort` | `2222` — rendered into `.env` as `PHP_FPM_HOST_SSH_PORT`; compose uses `${PHP_FPM_HOST_SSH_PORT}` at runtime |
+| `{{HOST_PGADMIN_PORT}}` | `env.docker` only | `hostPgAdminPort` | `8081` — rendered into `.env` as `PGADMIN_HOST_PORT`; compose uses `${PGADMIN_HOST_PORT}` at runtime |
 | `{{NODE_SERVICE_BLOCK}}` | `docker-compose.yml` | `nodeServiceBlock` | Content of snippet file, or empty string |
 
 ---
@@ -389,10 +393,15 @@ that project is ahead. Divergences are noted so existing projects know exactly w
 **Canonical structure:**
 
 - Services: `pgadmin`, `postgres`, `nginx`, `php-fpm`, optionally `node`
-- All host-side port mappings use template tokens (`{{HOST_HTTP_PORT}}`, `{{HOST_HTTPS_PORT}}`,
-  `{{HOST_SSH_PORT}}`, `{{HOST_PGADMIN_PORT}}`), substituted from the answers file at
-  generation time. The defaults match current projects; override in `docker.answers.json`
-  when running multiple projects simultaneously.
+- All four host-side port mappings use Docker Compose `${...}` env-var syntax, resolved at
+  runtime from `.env` (populated by `env.docker` token substitution). Changing any port in
+  `.env` takes effect on the next `docker compose up` without regenerating:
+  - nginx HTTP: `${NGINX_HOST_HTTP_PORT}:80`
+  - nginx HTTPS: `${NGINX_HOST_HTTPS_PORT}:443`
+  - php-fpm SSH: `${PHP_FPM_HOST_SSH_PORT}:22`
+  - pgAdmin: `${PGADMIN_HOST_PORT}:80`
+  - The defaults match current projects; override in `docker.answers.json` when running
+    multiple projects simultaneously (then regenerate so the `.env` env-vars are also updated).
 - The `nginx` service passes `NGINX_SERVER_NAME` and `NGINX_SERVER_ALIAS` as container
   environment variables so `startup.sh` can use them at start for cert generation and `envsubst`
 - The `php-fpm` service includes `extra_hosts: - "host.docker.internal:host-gateway"` (required

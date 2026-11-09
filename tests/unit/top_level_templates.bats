@@ -13,19 +13,19 @@ tokens_in() {
 
 # ---- T11: docker-compose.yml -------------------------------------------------
 
-@test "compose: uses exactly the five tokens" {
-    [ "$(tokens_in "$COMPOSE")" = "$(printf '{{HOST_HTTPS_PORT}}\n{{HOST_HTTP_PORT}}\n{{HOST_PGADMIN_PORT}}\n{{HOST_SSH_PORT}}\n{{NODE_SERVICE_BLOCK}}')" ]
+@test "compose: uses exactly the one token" {
+    [ "$(tokens_in "$COMPOSE")" = "$(printf '{{NODE_SERVICE_BLOCK}}')" ]
 }
 
 @test "compose: has pgadmin, postgres, nginx and php-fpm services" {
     for s in pgadmin postgres nginx php-fpm; do grep -qxF "    ${s}:" "$COMPOSE"; done
 }
 
-@test "compose: all four host ports are token-driven" {
-    grep -qF '"{{HOST_PGADMIN_PORT}}:80"' "$COMPOSE"
-    grep -qF '"{{HOST_HTTPS_PORT}}:443"' "$COMPOSE"
-    grep -qF '"{{HOST_HTTP_PORT}}:80"' "$COMPOSE"
-    grep -qF '"{{HOST_SSH_PORT}}:22"' "$COMPOSE"
+@test "compose: all four host ports use Docker Compose env vars" {
+    grep -qF '"${PGADMIN_HOST_PORT}:80"' "$COMPOSE"
+    grep -qF '"${NGINX_HOST_HTTPS_PORT}:443"' "$COMPOSE"
+    grep -qF '"${NGINX_HOST_HTTP_PORT}:80"' "$COMPOSE"
+    grep -qF '"${PHP_FPM_HOST_SSH_PORT}:22"' "$COMPOSE"
 }
 
 @test "compose: {{NODE_SERVICE_BLOCK}} is alone on its line, immediately before top-level networks:" {
@@ -56,9 +56,12 @@ tokens_in() {
 }
 
 @test "compose: renders to valid-looking YAML with the node block spliced in" {
-    out="$(sed -e 's/{{HOST_HTTP_PORT}}/80/' -e 's/{{HOST_HTTPS_PORT}}/443/' -e 's/{{HOST_SSH_PORT}}/2222/' \
-               -e 's/{{HOST_PGADMIN_PORT}}/8081/' -e "/^{{NODE_SERVICE_BLOCK}}\$/{r ${NODE}" -e 'd;}' "$COMPOSE")"
+    out="$(sed -e "/^{{NODE_SERVICE_BLOCK}}\$/{r ${NODE}" -e 'd;}' "$COMPOSE")"
     [[ "$out" != *'{{'* ]]
+    [[ "$out" == *'${NGINX_HOST_HTTP_PORT}:80'* ]]
+    [[ "$out" == *'${NGINX_HOST_HTTPS_PORT}:443'* ]]
+    [[ "$out" == *'${PHP_FPM_HOST_SSH_PORT}:22'* ]]
+    [[ "$out" == *'${PGADMIN_HOST_PORT}:80'* ]]
     [[ "$out" == *$'    node:\n        image: node:20-alpine'* ]]
     ! grep -P '\t' <<<"$out"
 }
