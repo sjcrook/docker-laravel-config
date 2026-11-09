@@ -331,7 +331,7 @@ resolve_blocks() {
     export TOKEN_NODE_SERVICE_BLOCK
 
     if [[ "${ANSWERS[phpFpmIncludeNode]}" == "true" ]]; then
-        TOKEN_NODE_APT_BLOCK=$'# Install nodejs + npm\nRUN apt-get install -y --no-install-recommends nodejs npm\n'
+        TOKEN_NODE_APT_BLOCK=$'# Install nodejs + npm\nRUN apt-get update && \\\n    apt-get install -y --no-install-recommends nodejs npm && \\\n    rm -rf /var/lib/apt/lists/*\n'
     else
         TOKEN_NODE_APT_BLOCK=""
     fi

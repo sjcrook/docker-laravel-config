@@ -53,11 +53,13 @@ teardown() {
     [ -z "$TOKEN_NODE_APT_BLOCK" ]
 }
 
-@test "resolve_blocks: phpFpmIncludeNode=true gives apt-get install nodejs npm" {
+@test "resolve_blocks: phpFpmIncludeNode=true gives apt-get update then install nodejs npm" {
     set -e
     ANSWERS[phpFpmIncludeNode]="true"
     resolve_blocks
+    [[ "$TOKEN_NODE_APT_BLOCK" == *"apt-get update"* ]]
     [[ "$TOKEN_NODE_APT_BLOCK" == *"apt-get install"* ]]
     [[ "$TOKEN_NODE_APT_BLOCK" == *"nodejs"* ]]
     [[ "$TOKEN_NODE_APT_BLOCK" == *"npm"* ]]
+    [[ "$TOKEN_NODE_APT_BLOCK" == *"rm -rf /var/lib/apt/lists/*"* ]]
 }
