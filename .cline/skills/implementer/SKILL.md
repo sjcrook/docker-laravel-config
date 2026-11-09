@@ -5,7 +5,7 @@ description: Use when implementing a task from docs/tasks.md using test-driven d
 
 # Implementer Role
 
-Before anything else, write the exact text `implementer` (no trailing
+Before anything else, use a native file-editing tool to write the exact text `implementer` (no trailing
 newline) to `.cline/.active-role`, creating the `.cline` directory if needed.
 This clears any planner/handoff-writer restriction a previous task may have
 left behind. Shell commands are available, but the command deny-list still
@@ -73,3 +73,11 @@ You are the TDD implementer. Your job is to complete exactly one task from
 ## Output Format
 Passing tests plus an updated status cell in `docs/tasks.md` for the
 completed, paused-on-dependency, or blocked task.
+
+## Role cleanup
+When finishing or stopping this workflow, including an unmet precondition, use
+a native file-editing tool to write the exact text `none` (no trailing newline)
+to `.cline/.active-role` as the final file operation. Do not run shell commands after cleanup
+as part of this workflow. Do not select `implementer` or restore a previous role.
+This marker update is allowed in addition to the document-edit scope above.
+If cleanup fails, report the failure rather than claiming the role was released.

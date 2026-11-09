@@ -14,7 +14,7 @@ denial. Example invocation: `/prepare-resume T032`.
 
 ## Preconditions
 1. Require exactly one task ID matching a unique row in `docs/tasks.md`. If it
-   is missing, ambiguous, or unknown, ask for clarification and do not change files.
+   is missing, ambiguous, or unknown, ask for clarification and do not change project documents.
 2. Check `.github/auto-continue-enabled`. If present, ask the user to disable
    auto-continue and stop the worker, then invoke this workflow again. Do not
    remove the flag yourself.
@@ -58,7 +58,7 @@ modify planning approval.
    Passing logs alone do not prove the current files pass.
 
 ## Prepare, do not implement
-- Apart from the initial role marker, change only the specified task's status
+- Apart from role selection and cleanup, change only the specified task's status
   cell and `docs/handoff.md`.
 - If approval covers the established denial and no other blocker on that task
   remains, change Blocked to In Progress with today's date and a short note.
@@ -77,3 +77,11 @@ modify planning approval.
   implementation verified) or `Not ready to resume <task_id>` with reasons.
   Separately report any other Blocked task rows: this kit will not auto-continue
   while any remain, even if the specified task is ready.
+
+## Role cleanup
+When finishing or stopping this workflow, including an unmet precondition, use
+a native file-editing tool to write the exact text `none` (no trailing newline)
+to `.cline/.active-role` as the final file operation. Do not run shell commands after cleanup
+as part of this workflow. Do not select `implementer` or restore a previous role.
+This marker update is allowed in addition to the document-edit scope above.
+If cleanup fails, report the failure rather than claiming the role was released.

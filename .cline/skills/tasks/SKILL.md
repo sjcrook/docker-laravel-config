@@ -61,3 +61,12 @@ after approval, following the shared workflow.
 - DO NOT mark a task `✅ Done` — only the implementer does that.
 - ONLY edit `docs/tasks.md` and `docs/planning/` (and `docs/functional-spec.md`/`docs/technical-spec.md`
   if clarifying scope).
+  Role selection and cleanup of `.cline/.active-role` are also permitted.
+
+## Role cleanup
+When finishing or stopping this workflow, including an unmet precondition, use
+a native file-editing tool to write the exact text `none` (no trailing newline)
+to `.cline/.active-role` as the final file operation. Do not run shell commands after cleanup
+as part of this workflow. Do not select `implementer` or restore a previous role.
+This marker update is allowed in addition to the document-edit scope above.
+If cleanup fails, report the failure rather than claiming the role was released.

@@ -35,6 +35,7 @@ You are the sprint planner. Your job is to turn `docs/functional-spec.md` and
 - DO NOT mark a task `✅ Done` — only the implementer does that.
 - ONLY edit `docs/tasks.md` and `docs/planning/` (and `docs/functional-spec.md`/`docs/technical-spec.md`
   if clarifying scope).
+  Role selection and cleanup of `.cline/.active-role` are also permitted.
 - Plan the full requested scope, not just the handoff's "Next" tasks.
   Implementation-only one-task/TDD execution rules and session task limits do
   not apply.
@@ -79,3 +80,11 @@ with an explicit approval request (or approved snapshots after approval).
 In both the response and any approval question, include clickable Markdown links
 to the actual workspace `docs/planning/review.md` and `docs/tasks.md`, not plain
 filenames or kit template paths. Name the task IDs and dispositions being approved.
+
+## Role cleanup
+When finishing or stopping this workflow, including an unmet precondition, use
+a native file-editing tool to write the exact text `none` (no trailing newline)
+to `.cline/.active-role` as the final file operation. Do not run shell commands after cleanup
+as part of this workflow. Do not select `implementer` or restore a previous role.
+This marker update is allowed in addition to the document-edit scope above.
+If cleanup fails, report the failure rather than claiming the role was released.

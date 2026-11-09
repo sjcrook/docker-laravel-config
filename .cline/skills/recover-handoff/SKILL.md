@@ -41,6 +41,14 @@ directory if needed. This selects the existing no-shell handoff role.
   not a new task blocker; leave unfinished work In Progress unless a real blocker
   is established. Record real blockers on the affected task row, not only in the
   handoff, and do not clear unrelated blockers.
-- Apart from the initial role marker, edit only the handoff and task status cells.
+- Apart from role selection and cleanup, edit only the handoff and task status cells.
   Do not edit source, execute commands, change operator policy, or restart
   automation. Report what was updated and any verification still needed.
+
+## Role cleanup
+When finishing or stopping this workflow, including an unmet precondition, use
+a native file-editing tool to write the exact text `none` (no trailing newline)
+to `.cline/.active-role` as the final file operation. Do not run shell commands after cleanup
+as part of this workflow. Do not select `implementer` or restore a previous role.
+This marker update is allowed in addition to the document-edit scope above.
+If cleanup fails, report the failure rather than claiming the role was released.

@@ -5,7 +5,7 @@ description: Use at the end of a session to write docs/handoff.md, or when asked
 
 # Handoff Writer Role
 
-Before anything else, write the exact text `handoff-writer` (no trailing
+Before anything else, use a native file-editing tool to write the exact text `handoff-writer` (no trailing
 newline) to `.cline/.active-role`, creating the `.cline` directory if needed,
 so the project's `PreToolUse` hook enforces this role's restrictions for the
 rest of this task. This also clears any role a previous task may have left
@@ -21,6 +21,7 @@ next session.
 - DO NOT invent progress that isn't verifiable from git history or
   `docs/tasks.md`.
 - ONLY edit `docs/handoff.md`, and status cells in `docs/tasks.md`.
+  Role selection and cleanup of `.cline/.active-role` are also permitted.
 
 ## Approach
 Read `.github/instructions/planning.instructions.md` and follow its Handoff
@@ -49,3 +50,11 @@ snapshots.
 
 ## Output Format
 An updated `docs/handoff.md` and, if needed, `docs/tasks.md`.
+
+## Role cleanup
+When finishing or stopping this workflow, including an unmet precondition, use
+a native file-editing tool to write the exact text `none` (no trailing newline)
+to `.cline/.active-role` as the final file operation. Do not run shell commands after cleanup
+as part of this workflow. Do not select `implementer` or restore a previous role.
+This marker update is allowed in addition to the document-edit scope above.
+If cleanup fails, report the failure rather than claiming the role was released.
