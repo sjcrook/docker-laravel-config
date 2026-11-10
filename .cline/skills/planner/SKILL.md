@@ -12,6 +12,9 @@ this task. This also clears any role a previous task may have left behind.
 
 Use a native file-editing tool for this role marker, including directory
 creation if needed; never use a shell command to initialize the role.
+Wait for its result before any other tool call; read back an already-correct
+marker if the editor reports a no-op. Follow the Readiness and Steering
+contract in `AGENTS.md` before document edits.
 
 ## Tool use
 Use only native file-reading, searching, and editing tools throughout planning,

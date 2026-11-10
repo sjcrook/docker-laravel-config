@@ -11,4 +11,4 @@
 # near-identical copy also lives at .clinerules/hooks/SessionShutdown (no file
 # extension) for the VS Code extension, which doesn't discover hooks from
 # this directory.
-exec "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/external/ai-session-kit/scripts/check-handoff-cline.sh"
+exec "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/external/ai-session-kit/scripts/check-handoff-cline.sh" SessionShutdown

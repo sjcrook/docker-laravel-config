@@ -9,6 +9,9 @@ so the project's `PreToolUse` hook enforces the handoff-writer role's
 restrictions for the rest of this task (no shell commands). This also clears
 any role a previous task may have left behind.
 
+Follow the Readiness and Steering contract in `AGENTS.md`; await role selection
+and edit results separately. An interrupted workflow is not completed work.
+
 Read `.github/instructions/planning.instructions.md` and follow its Handoff
 section. Refresh "Next" from current eligible tasks and planning approval; never
 select Superseded work or approve/update planning snapshots.

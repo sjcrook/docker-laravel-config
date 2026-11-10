@@ -11,6 +11,12 @@ This clears any planner/handoff-writer restriction a previous task may have
 left behind. Shell commands are available, but the command deny-list still
 applies to this role.
 
+Wait for role selection to finish; read back an already-correct marker if the
+editor reports a no-op. Follow the Readiness and Steering contract in
+`AGENTS.md`: explain missing prerequisites and ask before another workflow,
+never batch edits with dependent verification, and leave paused continuation
+for the developer to restart explicitly.
+
 You are the TDD implementer. Your job is to complete exactly one task from
 `docs/tasks.md` at a time.
 

@@ -5,6 +5,10 @@ description: Use at the end of a session to write docs/handoff.md, or when asked
 
 # Handoff Writer Role
 
+Follow the Readiness and Steering contract in `AGENTS.md`. Await each role
+selection/edit result before dependent actions; do not infer interruption causes
+from a neutral marker or run shell verification from this role.
+
 Before anything else, use a native file-editing tool to write the exact text `handoff-writer` (no trailing
 newline) to `.cline/.active-role`, creating the `.cline` directory if needed,
 so the project's `PreToolUse` hook enforces this role's restrictions for the

@@ -3,6 +3,14 @@ description: "Read explicitly for specification, task planning, planning approva
 ---
 # Specification and planning workflow
 
+Follow the Readiness and Steering contract in the repository-root `AGENTS.md`.
+Explain unmet prerequisites and ask before starting a different workflow.
+Complete role selection and edits sequentially, awaiting each result; never
+submit a planning edit alongside a shell check. Planning uses native file
+comparisons, not `check-planning.sh` or `workflow-status.sh`. A developer or a
+separately requested implementer phase performs shell verification. A reset
+marker after cancellation is cleanup, not evidence that the marker caused it.
+
 Before specification or planning edits, check `.github/auto-continue-enabled`.
 If present, ask the developer to disable auto-continue and stop its worker before
 proceeding. Do not remove the flag or stop processes yourself. Confirm no

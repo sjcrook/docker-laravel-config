@@ -7,6 +7,10 @@ file in `.github/`, not relative to the working directory. For file tools, use
 The repository root is the current project's Git root, not its parent directory.
 If the root is uncertain, ask the developer rather than probing parent folders.
 
+Apply its Readiness and Steering contract to equivalent plain-language workflow
+requests too. Explain missing prerequisites and ask before starting another
+workflow; do not treat an out-of-order request as a reason to run prohibited tools.
+
 This includes a literal `/tasks` message that the
 chat interface has not expanded. Use its Literal Slash Commands mapping to load
 the current workspace prompt, role, and referenced workflow instructions.

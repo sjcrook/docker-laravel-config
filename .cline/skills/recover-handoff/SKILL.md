@@ -5,6 +5,10 @@ description: "Use when the user requests /recover-handoff, recovery after an int
 
 # Recover an Interrupted Session
 
+Follow the Readiness and Steering contract in `AGENTS.md`. Await role selection
+and edit results separately; use recorded rejection/lifecycle events, not the
+current marker, to explain interruption. Do not clear continuation pauses.
+
 Before anything else, use the editing tool to write the exact text
 `handoff-writer` (no trailing newline) to `.cline/.active-role`, creating the
 directory if needed. This selects the existing no-shell handoff role.

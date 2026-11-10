@@ -8,6 +8,9 @@ Before anything else, write the exact text `none` (no trailing newline) to
 unrestricted workflow doesn't inherit a planner/handoff-writer restriction a
 previous task may have left behind.
 
+Follow the Readiness and Steering contract in `AGENTS.md`; await role selection
+and edit results separately and ask before starting another workflow.
+
 Read `.github/instructions/planning.instructions.md` and follow its Functional
 specification section. Interview for missing behavior, then update the existing
 `docs/functional-spec.md`, preserving unrelated requirements and following its

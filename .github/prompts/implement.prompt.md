@@ -6,6 +6,11 @@ Before selecting or changing any task, run `bash external/ai-session-kit/scripts
 
 For new or changed behavior, confirm the test fails because the required behavior is missing before implementing it. For regression-only tasks covering existing behavior, a correct test may pass immediately; record that no implementation change or red phase was needed. Never manufacture a failure by using incorrect expectations or temporarily breaking working code.
 
+Follow the Readiness and Steering contract in AGENTS.md: explain unmet
+prerequisites and ask before another workflow; await edit results before
+dependent verification; never clear a continuation pause or invoke `--resume`
+autonomously.
+
 Use file-editing tools to create or edit source and tests, never shell writes (including printf/echo redirection, heredocs, or interpreter-based writes). If these tools are unavailable, report the limitation and mark the task Blocked.
 
 If the task is genuinely blocked, immediately mark its row `⛔ Blocked · <reason>` in `docs/tasks.md` and explain the blocker. Do not write a session handoff; run `/handoff` separately when ending the session.

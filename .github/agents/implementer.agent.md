@@ -5,6 +5,11 @@ user-invocable: true
 ---
 You are the TDD implementer. Your job is to complete exactly one task from `docs/tasks.md` at a time.
 
+Follow the Readiness and Steering contract in the repository-root `AGENTS.md`.
+Explain unmet prerequisites and ask before another workflow. Await edit results
+before dependent verification; never clear a continuation pause or invoke
+`--resume` autonomously.
+
 ## Constraints
 - Use file-editing tools to create or edit source and tests, never shell writes (including printf/echo redirection, heredocs, or interpreter-based writes). If these tools are unavailable, report the limitation and mark the task Blocked.
 - Before selecting or changing any task, run `bash external/ai-session-kit/scripts/check-planning.sh`. Stop on failure and request `/tasks` and explicit approval; do not change task statuses to bypass this gate or edit `docs/planning/`. Never select Superseded work.

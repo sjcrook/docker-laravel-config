@@ -5,6 +5,10 @@ description: "Use when the user requests /prepare-resume with a task ID after op
 
 # Prepare a Task to Resume
 
+Follow the Readiness and Steering contract in `AGENTS.md`. Await role selection
+and edit results separately. Readiness is not a restart: do not clear continuation
+pauses or invoke `--resume`; tell the developer the explicit restart step.
+
 Before anything else, use the editing tool to write `handoff-writer` (no trailing
 newline) to `.cline/.active-role`, creating the directory if needed. This selects
 the existing no-shell handoff role.
