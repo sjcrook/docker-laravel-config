@@ -125,6 +125,7 @@ load_answers() {
     ANSWERS[hostHttpsPort]=$(      jq -r '.hostHttpsPort // 443'           "$file")
     ANSWERS[hostSshPort]=$(        jq -r '.hostSshPort // 2222'            "$file")
     ANSWERS[hostPgAdminPort]=$(    jq -r '.hostPgAdminPort // 8081'        "$file")
+    ANSWERS[hostVitePort]=$(       jq -r '.hostVitePort // 5173'           "$file")
 }
 
 validate_answers() {
@@ -148,7 +149,7 @@ validate_answers() {
     esac
 
     local field v
-    for field in hostHttpPort hostHttpsPort hostSshPort hostPgAdminPort; do
+    for field in hostHttpPort hostHttpsPort hostSshPort hostPgAdminPort hostVitePort; do
         v="${ANSWERS[$field]}"
         if ! [[ "$v" =~ ^[0-9]+$ ]] || (( 10#$v < 1 || 10#$v > 65535 )); then
             echo "ERROR: $field must be an integer between 1 and 65535 (got: $v)"
@@ -182,6 +183,7 @@ save_answers() {
       --argjson hostHttpsPort    "${ANSWERS[hostHttpsPort]}" \
       --argjson hostSshPort      "${ANSWERS[hostSshPort]}" \
       --argjson hostPgAdminPort  "${ANSWERS[hostPgAdminPort]}" \
+      --argjson hostVitePort     "${ANSWERS[hostVitePort]}" \
       '{schemaVersion:$schemaVersion,phpVersion:$phpVersion,
         pgClientVersion:$pgClientVersion,domain:$domain,
         domainAliases:$domainAliases,memoryLimit:$memoryLimit,
@@ -189,7 +191,7 @@ save_answers() {
         timezone:$timezone,phpFpmIncludeNode:$phpFpmIncludeNode,
         nodeServiceBlock:$nodeServiceBlock,hostHttpPort:$hostHttpPort,
         hostHttpsPort:$hostHttpsPort,hostSshPort:$hostSshPort,
-        hostPgAdminPort:$hostPgAdminPort}' \
+        hostPgAdminPort:$hostPgAdminPort,hostVitePort:$hostVitePort}' \
       > "${out}/docker.answers.json"
     echo "  Wrote: docker.answers.json"
 }
@@ -283,12 +285,13 @@ interactive_prompts() {
     prompt_port "Host HTTPS port" "443";      ANSWERS[hostHttpsPort]="$REPLY_VALUE"
     prompt_port "Host SSH port" "2222";       ANSWERS[hostSshPort]="$REPLY_VALUE"
     prompt_port "Host pgAdmin port" "8081";   ANSWERS[hostPgAdminPort]="$REPLY_VALUE"
+    prompt_port "Host Vite dev server port" "5173"; ANSWERS[hostVitePort]="$REPLY_VALUE"
 
     # Persist immediately, before any file is generated (tech §7).
     save_answers "$OUT_DIR"
 }
 
-# export_tokens — export the 10 scalar TOKEN_* variables (tech §11).
+# export_tokens — export the 11 scalar TOKEN_* variables (tech §11).
 # TOKEN_NODE_SERVICE_BLOCK / TOKEN_NODE_APT_BLOCK are set by resolve_blocks().
 export_tokens() {
     export TOKEN_PHP_VERSION="${ANSWERS[phpVersion]}"
@@ -301,6 +304,7 @@ export_tokens() {
     export TOKEN_HOST_HTTPS_PORT="${ANSWERS[hostHttpsPort]}"
     export TOKEN_HOST_SSH_PORT="${ANSWERS[hostSshPort]}"
     export TOKEN_HOST_PGADMIN_PORT="${ANSWERS[hostPgAdminPort]}"
+    export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"
 }
 
 # render_template <src> <dst> — replace every {{TOKEN}} with $TOKEN_<TOKEN>.
@@ -457,6 +461,7 @@ print_env_fragment() {
         export TOKEN_HOST_HTTPS_PORT="${ANSWERS[hostHttpsPort]}"
         export TOKEN_HOST_SSH_PORT="${ANSWERS[hostSshPort]}"
         export TOKEN_HOST_PGADMIN_PORT="${ANSWERS[hostPgAdminPort]}"
+        export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"
         export TOKEN_NGINX_SERVER_NAME="${ANSWERS[domain]}"
         export TOKEN_NGINX_SERVER_ALIAS="${ANSWERS[domainAliases]}"
         render_template "${TEMPLATES_DIR}/env.docker" "$tmp"

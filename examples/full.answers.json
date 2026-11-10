@@ -13,5 +13,6 @@
   "hostHttpPort": 80,
   "hostHttpsPort": 443,
   "hostSshPort": 2222,
-  "hostPgAdminPort": 8081
+  "hostPgAdminPort": 8081,
+  "hostVitePort": 5173
 }

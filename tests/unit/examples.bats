@@ -27,15 +27,15 @@ setup() {
     [ "$(jq -c . "$MINIMAL")" = '{"schemaVersion":1,"phpVersion":"8.5","pgClientVersion":18,"domain":"myapp.local"}' ]
 }
 
-@test "full has exactly the 15 schema fields" {
+@test "full has exactly the 16 schema fields" {
     run jq -r 'keys | join(" ")' "$FULL"
     expected="$(jq -r '.properties | keys | join(" ")' "$SCHEMA")"
     [ "$output" = "$expected" ]
 }
 
 @test "full uses canonical defaults for optional fields" {
-    run jq -c '{memoryLimit,uploadMaxFilesize,postMaxSize,timezone,phpFpmIncludeNode,hostHttpPort,hostHttpsPort,hostSshPort,hostPgAdminPort}' "$FULL"
-    [ "$output" = '{"memoryLimit":"256M","uploadMaxFilesize":"64M","postMaxSize":"64M","timezone":"America/New_York","phpFpmIncludeNode":false,"hostHttpPort":80,"hostHttpsPort":443,"hostSshPort":2222,"hostPgAdminPort":8081}' ]
+    run jq -c '{memoryLimit,uploadMaxFilesize,postMaxSize,timezone,phpFpmIncludeNode,hostHttpPort,hostHttpsPort,hostSshPort,hostPgAdminPort,hostVitePort}' "$FULL"
+    [ "$output" = '{"memoryLimit":"256M","uploadMaxFilesize":"64M","postMaxSize":"64M","timezone":"America/New_York","phpFpmIncludeNode":false,"hostHttpPort":80,"hostHttpsPort":443,"hostSshPort":2222,"hostPgAdminPort":8081,"hostVitePort":5173}' ]
 }
 
 @test "full uses the builtin node service and example domain/aliases" {

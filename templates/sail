@@ -11,5 +11,12 @@
 # basename "$PWD" is POSIX-portable (works on bash, zsh, Linux, macOS, Git Bash, WSL).
 CONTAINER_NAME="$(basename "$PWD")-php-fpm-1"
 
-docker exec -i -w /var/www/laravel/current "$CONTAINER_NAME" \
+# Allocate a TTY only when sail itself is running in a terminal.
+# With -t, Ctrl+C sends SIGINT into the container's process group,
+# which properly kills npm/vite and all its children.
+# Without it (e.g. piped in a script), -t would error.
+TTY_FLAG=""
+[ -t 0 ] && TTY_FLAG="-t"
+
+docker exec -i $TTY_FLAG -w /var/www/laravel/current "$CONTAINER_NAME" \
   bash -c 'set -x; exec "$@"' dummy "$@"

@@ -16,7 +16,7 @@ teardown() {
     rm -rf "$TMP"
 }
 
-@test "export_tokens: exports all 10 scalar tokens from ANSWERS" {
+@test "export_tokens: exports all 11 scalar tokens from ANSWERS" {
     set -e
     load_answers "${REPO_ROOT}/examples/full.answers.json"
     export_tokens
@@ -30,6 +30,7 @@ teardown() {
     [ "$TOKEN_HOST_HTTPS_PORT" = "443" ]
     [ "$TOKEN_HOST_SSH_PORT" = "2222" ]
     [ "$TOKEN_HOST_PGADMIN_PORT" = "8081" ]
+    [ "$TOKEN_HOST_VITE_PORT" = "5173" ]
 }
 
 @test "export_tokens: tokens are visible to child processes" {
@@ -48,13 +49,13 @@ teardown() {
     [ "$(cat "$TMP/dst")" = "FROM php:8.4-fpm" ]
 }
 
-@test "render_template: all 10 scalar tokens replaced" {
+@test "render_template: all 11 scalar tokens replaced" {
     set -e
     load_answers "${REPO_ROOT}/examples/full.answers.json"
     export_tokens
-    printf '%s\n' '{{PHP_VERSION}} {{PG_CLIENT_VERSION}} {{MEMORY_LIMIT}} {{UPLOAD_MAX_FILESIZE}} {{POST_MAX_SIZE}} {{TIMEZONE}} {{HOST_HTTP_PORT}} {{HOST_HTTPS_PORT}} {{HOST_SSH_PORT}} {{HOST_PGADMIN_PORT}}' > "$TMP/src"
+    printf '%s\n' '{{PHP_VERSION}} {{PG_CLIENT_VERSION}} {{MEMORY_LIMIT}} {{UPLOAD_MAX_FILESIZE}} {{POST_MAX_SIZE}} {{TIMEZONE}} {{HOST_HTTP_PORT}} {{HOST_HTTPS_PORT}} {{HOST_SSH_PORT}} {{HOST_PGADMIN_PORT}} {{HOST_VITE_PORT}}' > "$TMP/src"
     render_template "$TMP/src" "$TMP/dst"
-    [ "$(cat "$TMP/dst")" = "8.5 18 256M 64M 64M America/New_York 80 443 2222 8081" ]
+    [ "$(cat "$TMP/dst")" = "8.5 18 256M 64M 64M America/New_York 80 443 2222 8081 5173" ]
 }
 
 @test "render_template: non-token content unchanged" {

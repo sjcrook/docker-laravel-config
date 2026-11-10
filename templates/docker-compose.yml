@@ -59,6 +59,7 @@ services:
         working_dir: /var/www/laravel/current
         ports:
             - "${PHP_FPM_HOST_SSH_PORT}:22"
+            - "${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}"
         extra_hosts:
             - "host.docker.internal:host-gateway"
         volumes:

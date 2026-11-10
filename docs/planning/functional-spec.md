@@ -37,7 +37,7 @@ This framework covers the **local development** Docker environment only:
   `php-fpm` container (e.g. `./sail php artisan migrate`, `./sail composer require …`).
   This is a hand-rolled convenience script and is **not** related to Laravel Sail (the
   official Laravel Docker package); it predates and is independent of it.
-- Host port mappings for nginx, php-fpm SSH, and pgAdmin
+- Host port mappings for nginx, php-fpm SSH, pgAdmin, and the Vite dev server
 
 It does **not** cover:
 - Production or staging Docker/container configurations
@@ -164,7 +164,11 @@ the consuming project at `docker.answers.json` (project root, alongside `docker-
   "hostHttpPort": 80,
   "hostHttpsPort": 443,
   "hostSshPort": 2222,
-  "hostPgAdminPort": 8081
+  "hostPgAdminPort": 8081,
+
+  // Vite HMR / dev-server port — must be the same value on both sides of the mapping
+  // so the browser can reach the Vite WS endpoint on the same port number it was told to use.
+  "hostVitePort": 5173
 }
 ```
 
@@ -187,6 +191,7 @@ the consuming project at `docker.answers.json` (project root, alongside `docker-
 | `hostHttpsPort` | integer | no | `443` | Host port mapped to nginx container port 443 |
 | `hostSshPort` | integer | no | `2222` | Host port mapped to php-fpm container port 22 (Tinkerwell SSH) |
 | `hostPgAdminPort` | integer | no | `8081` | Host port mapped to pgAdmin container port 80 |
+| `hostVitePort` | integer | no | `5173` | Host port for the Vite dev server; must match `VITE_DEV_SERVER_PORT` in `.env` (same port both sides of the mapping) |
 
 ---
 
@@ -237,6 +242,7 @@ Host HTTP port  [80]:
 Host HTTPS port [443]:
 Host SSH port   [2222]:
 Host pgAdmin port [8081]:
+Host Vite dev server port [5173]:
 ```
 
 After the prompts, answers are saved as `docker.answers.json` before any files are written.
@@ -337,7 +343,14 @@ NGINX_SSL_PATH=./docker/nginx/ssl/
 NGINX_SERVER_NAME=<domain>
 NGINX_SERVER_ALIAS=<domainAliases>
 
+PHP_FPM_HOST_SSH_PORT=<hostSshPort>
 PHP_FPM_HOST_LOG_PATH=./docker/logs/php-fpm/
+
+##### VITE
+VITE_DEV_SERVER_PORT=<hostVitePort>
+
+##### PGADMIN
+PGADMIN_HOST_PORT=<hostPgAdminPort>
 ```
 
 After printing the fragment, the generator also prints the following reminder:
@@ -372,8 +385,9 @@ this framework. Ensure they are set correctly for your project:
 | `{{TIMEZONE}}` | `php-fpm/laravel.ini` | `timezone` | `America/New_York` |
 | `{{HOST_HTTP_PORT}}` | `env.docker` only | `hostHttpPort` | `80` — rendered into `.env` as `NGINX_HOST_HTTP_PORT`; compose uses `${NGINX_HOST_HTTP_PORT}` at runtime |
 | `{{HOST_HTTPS_PORT}}` | `env.docker` only | `hostHttpsPort` | `443` — rendered into `.env` as `NGINX_HOST_HTTPS_PORT`; compose uses `${NGINX_HOST_HTTPS_PORT}` at runtime |
-| `{{HOST_SSH_PORT}}` | `docker-compose.yml` | `hostSshPort` | `2222` |
-| `{{HOST_PGADMIN_PORT}}` | `docker-compose.yml` | `hostPgAdminPort` | `8081` |
+| `{{HOST_SSH_PORT}}` | `env.docker` only | `hostSshPort` | `2222` — rendered into `.env` as `PHP_FPM_HOST_SSH_PORT`; compose uses `${PHP_FPM_HOST_SSH_PORT}` at runtime |
+| `{{HOST_PGADMIN_PORT}}` | `env.docker` only | `hostPgAdminPort` | `8081` — rendered into `.env` as `PGADMIN_HOST_PORT`; compose uses `${PGADMIN_HOST_PORT}` at runtime |
+| `{{HOST_VITE_PORT}}` | `env.docker` only | `hostVitePort` | `5173` — rendered into `.env` as `VITE_DEV_SERVER_PORT`; compose uses `${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}` at runtime |
 | `{{NODE_SERVICE_BLOCK}}` | `docker-compose.yml` | `nodeServiceBlock` | Content of snippet file, or empty string |
 
 ---
@@ -389,19 +403,23 @@ that project is ahead. Divergences are noted so existing projects know exactly w
 **Canonical structure:**
 
 - Services: `pgadmin`, `postgres`, `nginx`, `php-fpm`, optionally `node`
-- Host-side port mappings:
-  - **nginx HTTP** (`${NGINX_HOST_HTTP_PORT}:80`) and **nginx HTTPS** (`${NGINX_HOST_HTTPS_PORT}:443`)
-    use Docker Compose `${...}` env-var syntax, resolved at runtime from `.env`. Changing these
-    values in `.env` takes effect on the next `docker compose up` without regenerating.
-  - **PHP-FPM SSH** (`{{HOST_SSH_PORT}}:22`) and **pgAdmin** (`{{HOST_PGADMIN_PORT}}:80`)
-    use generator tokens substituted at generation time.
+- All host-side port mappings use Docker Compose `${...}` env-var syntax, resolved at
+  runtime from `.env` (populated by `env.docker` token substitution). Changing any port in
+  `.env` takes effect on the next `docker compose up` without regenerating:
+  - nginx HTTP: `${NGINX_HOST_HTTP_PORT}:80`
+  - nginx HTTPS: `${NGINX_HOST_HTTPS_PORT}:443`
+  - php-fpm SSH: `${PHP_FPM_HOST_SSH_PORT}:22`
+  - pgAdmin: `${PGADMIN_HOST_PORT}:80`
+  - Vite dev server: `${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}` (on `php-fpm`;
+    same port both sides so the HMR WebSocket URL the browser receives matches the exposed
+    host port — see §13 "Why the Vite port is symmetric")
   - The defaults match current projects; override in `docker.answers.json` when running
     multiple projects simultaneously (then regenerate so the `.env` env-vars are also updated).
 - The `nginx` service passes `NGINX_SERVER_NAME` and `NGINX_SERVER_ALIAS` as container
   environment variables so `startup.sh` can use them at start for cert generation and `envsubst`
 - The `php-fpm` service includes `extra_hosts: - "host.docker.internal:host-gateway"` (required
   on Linux for Xdebug to reach the host IDE; harmless on macOS)
-- The `php-fpm` service exposes `{{HOST_SSH_PORT}}:22` for Tinkerwell SSH access
+- The `php-fpm` service exposes `${PHP_FPM_HOST_SSH_PORT}:22` for Tinkerwell SSH access
 - The optional `node` service block is the canonical `node:20-alpine` one-shot pattern:
 
 ```yaml
@@ -774,7 +792,14 @@ and other PHP CLI commands during local development without needing to `docker e
 # basename "$PWD" is POSIX-portable (works on bash, zsh, Linux, macOS, Git Bash, WSL).
 CONTAINER_NAME="$(basename "$PWD")-php-fpm-1"
 
-docker exec -i -w /var/www/laravel/current "$CONTAINER_NAME" \
+# Allocate a TTY only when sail itself is running in a terminal.
+# With -t, Ctrl+C sends SIGINT into the container's process group,
+# which properly kills npm/vite and all its children.
+# Without it (e.g. piped in a script), -t would error.
+TTY_FLAG=""
+[ -t 0 ] && TTY_FLAG="-t"
+
+docker exec -i $TTY_FLAG -w /var/www/laravel/current "$CONTAINER_NAME" \
   bash -c 'set -x; exec "$@"' dummy "$@"
 ```
 
@@ -793,6 +818,17 @@ not installed by default) or Git Bash.
 **The `dummy "$@"` pattern:** `bash -c '...' dummy "$@"` passes `dummy` as `$0` (the
 script name inside `bash -c`) and the real arguments as `$1`, `$2`, etc. Without `dummy`,
 the first argument would be consumed as `$0` and silently dropped.
+
+**TTY detection (`[ -t 0 ] && TTY_FLAG="-t"`):** `docker exec -t` allocates a pseudo-TTY
+inside the container, which causes the kernel to put the container's process group in the
+foreground of that TTY. When the user presses Ctrl+C, the terminal sends `SIGINT` to the
+entire foreground process group — meaning npm, Vite, and all their child processes are
+killed cleanly, not just the outermost shell. Without `-t`, Ctrl+C only reaches the
+`docker exec` process on the host; the container-side processes keep running. However,
+passing `-t` when `sail` itself is not attached to a terminal (e.g. called from a CI
+script or a shell pipeline) causes `docker exec` to error with "the input device is not a
+TTY". The `[ -t 0 ]` test (`-t 0` = file descriptor 0 is a terminal) detects the
+interactive case and sets the flag only when it is safe to do so.
 
 **The generator** copies this script verbatim and applies `chmod +x sail` so it is
 immediately executable without an extra step.
@@ -949,12 +985,13 @@ the answers file means updating a project from PHP 8.2 → 8.5 is a one-line cha
 
 ### Why host ports are in the answers file
 
-All four host-side port mappings (`hostHttpPort`, `hostHttpsPort`, `hostSshPort`,
-`hostPgAdminPort`) are answer-file variables. The defaults (`80`, `443`, `2222`, `8081`)
-work when only one project's Docker stack is running at a time. When two projects run
-simultaneously, each project simply uses a different set of ports in its `docker.answers.json`
-and regenerates. There is no need for a shared port registry or any cross-project coordination
-— the answers file is the complete record of a project's port choices.
+All five host-side port mappings (`hostHttpPort`, `hostHttpsPort`, `hostSshPort`,
+`hostPgAdminPort`, `hostVitePort`) are answer-file variables. The defaults
+(`80`, `443`, `2222`, `8081`, `5173`) work when only one project's Docker stack is running
+at a time. When two projects run simultaneously, each project simply uses a different set of
+ports in its `docker.answers.json` and regenerates. There is no need for a shared port
+registry or any cross-project coordination — the answers file is the complete record of a
+project's port choices.
 
 ### Why the `sail` script is invariant (not templated)
 
@@ -963,6 +1000,27 @@ working directory at runtime using `basename "$PWD"`. There is therefore nothing
 generation time; the file is copied verbatim. Because it is an invariant copy (not a
 hand-edited file), the generator can safely overwrite it on each update pull without the
 hand-edit safety check.
+
+### Why the Vite port is symmetric (`${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}`)
+
+Vite's HMR client is injected into the browser at build time and told to connect back to
+the dev server on a specific port number. If the host-side port differed from the
+container-side port, the browser would try to open a WebSocket to the host port Vite
+advertised (the container-internal port) — which is not the port Docker actually exposed —
+and HMR would silently fail. Using the same port number on both sides of the Docker port
+mapping eliminates this mismatch without requiring any extra `vite.config.js` configuration.
+Developers who need to run two projects simultaneously simply set a different `hostVitePort`
+(e.g. `5174`) in `docker.answers.json` and also set `server.port` and `server.hmr.port` to
+match in their `vite.config.js`.
+
+### Why `sail` uses conditional TTY allocation rather than always `-t` or never `-t`
+
+Always passing `-t` breaks non-interactive callers (CI scripts, shell pipelines) with the
+error "the input device is not a TTY". Always omitting `-t` means Ctrl+C does not propagate
+`SIGINT` to the container's process group, leaving long-running foreground processes such as
+`./sail npm run dev` (Vite) alive after the user presses Ctrl+C. The `[ -t 0 ] && TTY_FLAG="-t"`
+pattern selects the right behaviour automatically at runtime, requiring no per-invocation flags
+from the developer.
 
 ---
 

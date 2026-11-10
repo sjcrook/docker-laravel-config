@@ -14,7 +14,7 @@ teardown() {
 }
 
 # Load an answers file and validate it in the current shell.
-@test "load_answers: reads all 14 value fields from full example" {
+@test "load_answers: reads all 15 value fields from full example" {
     load_answers "${REPO_ROOT}/examples/full.answers.json"
     [ "${ANSWERS[phpVersion]}" = "8.5" ]
     [ "${ANSWERS[pgClientVersion]}" = "18" ]
@@ -30,6 +30,7 @@ teardown() {
     [ "${ANSWERS[hostHttpsPort]}" = "443" ]
     [ "${ANSWERS[hostSshPort]}" = "2222" ]
     [ "${ANSWERS[hostPgAdminPort]}" = "8081" ]
+    [ "${ANSWERS[hostVitePort]}" = "5173" ]
 }
 
 @test "load_answers: optional field defaults applied for minimal example" {
@@ -45,6 +46,7 @@ teardown() {
     [ "${ANSWERS[hostHttpsPort]}" = "443" ]
     [ "${ANSWERS[hostSshPort]}" = "2222" ]
     [ "${ANSWERS[hostPgAdminPort]}" = "8081" ]
+    [ "${ANSWERS[hostVitePort]}" = "5173" ]
 }
 
 @test "load_answers: phpFpmIncludeNode true is loaded as true" {
@@ -103,6 +105,14 @@ teardown() {
     [[ "$output" == *"hostPgAdminPort"* ]]
 }
 
+@test "validate_answers: fails hostVitePort 65536" {
+    load_answers "${REPO_ROOT}/examples/minimal.answers.json"
+    ANSWERS[hostVitePort]=65536
+    run validate_answers
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"hostVitePort"* ]]
+}
+
 @test "validate_answers: fails non-numeric port" {
     load_answers "${REPO_ROOT}/examples/minimal.answers.json"
     ANSWERS[hostSshPort]="abc"
@@ -156,7 +166,7 @@ teardown() {
     set -e
     load_answers "${REPO_ROOT}/examples/full.answers.json"
     save_answers "$TMP"
-    run jq -r '[.schemaVersion,.pgClientVersion,.hostHttpPort,.hostHttpsPort,.hostSshPort,.hostPgAdminPort] | map(type) | unique | join(",")' "$TMP/docker.answers.json"
+    run jq -r '[.schemaVersion,.pgClientVersion,.hostHttpPort,.hostHttpsPort,.hostSshPort,.hostPgAdminPort,.hostVitePort] | map(type) | unique | join(",")' "$TMP/docker.answers.json"
     [ "$output" = "number" ]
 }
 

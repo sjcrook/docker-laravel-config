@@ -51,6 +51,15 @@ teardown() {
     grep -qxF 'opcache.jit=tracing' "${TEST_OUT}/docker/php-fpm/laravel.ini"
 }
 
+@test "full: stdout contains VITE_DEV_SERVER_PORT=5173" {
+    run "${REPO_ROOT}/generate.sh" --answers "${REPO_ROOT}/examples/full.answers.json" --out-dir "${TEST_OUT}"
+    [[ "$output" == *"VITE_DEV_SERVER_PORT=5173"* ]]
+}
+
+@test "full: docker-compose.yml maps the Vite port via env var" {
+    grep -qF '${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}' "${TEST_OUT}/docker-compose.yml"
+}
+
 @test "full: opcache.enable_cli is absent from laravel.ini (entrypoint injects it)" {
     ! grep -qE '^opcache\.enable_cli' "${TEST_OUT}/docker/php-fpm/laravel.ini"
 }

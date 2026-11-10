@@ -172,6 +172,7 @@ Each prompt uses `read -r -p "…[default]: " value; value="${value:-default}"`.
 | Host HTTPS port | `443` | `hostHttpsPort` |
 | Host SSH port | `2222` | `hostSshPort` |
 | Host pgAdmin port | `8081` | `hostPgAdminPort` |
+| Host Vite dev server port | `5173` | `hostVitePort` |
 
 `phpFpmIncludeNode` is stored as the JSON literal `true` or `false` (no quotes).
 Port fields are stored as bare integers (no quotes) so `save_answers()` emits valid JSON.
@@ -203,6 +204,7 @@ load_answers() {
     ANSWERS[hostHttpsPort]=$(     jq -r '.hostHttpsPort // 443'     "$file")
     ANSWERS[hostSshPort]=$(       jq -r '.hostSshPort // 2222'      "$file")
     ANSWERS[hostPgAdminPort]=$(   jq -r '.hostPgAdminPort // 8081'  "$file")
+    ANSWERS[hostVitePort]=$(      jq -r '.hostVitePort // 5173'     "$file")
 }
 ```
 
@@ -298,6 +300,7 @@ export_tokens() {
     export TOKEN_HOST_HTTPS_PORT="${ANSWERS[hostHttpsPort]}"
     export TOKEN_HOST_SSH_PORT="${ANSWERS[hostSshPort]}"
     export TOKEN_HOST_PGADMIN_PORT="${ANSWERS[hostPgAdminPort]}"
+    export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"
     # TOKEN_NODE_SERVICE_BLOCK and TOKEN_NODE_APT_BLOCK set by resolve_blocks()
 }
 ```
@@ -415,6 +418,7 @@ save_answers() {
       --argjson hostHttpsPort     "${ANSWERS[hostHttpsPort]}" \
       --argjson hostSshPort       "${ANSWERS[hostSshPort]}" \
       --argjson hostPgAdminPort   "${ANSWERS[hostPgAdminPort]}" \
+      --argjson hostVitePort      "${ANSWERS[hostVitePort]}" \
       '{schemaVersion:$schemaVersion,phpVersion:$phpVersion,
         pgClientVersion:$pgClientVersion,domain:$domain,
         domainAliases:$domainAliases,memoryLimit:$memoryLimit,
@@ -422,7 +426,7 @@ save_answers() {
         timezone:$timezone,phpFpmIncludeNode:$phpFpmIncludeNode,
         nodeServiceBlock:$nodeServiceBlock,hostHttpPort:$hostHttpPort,
         hostHttpsPort:$hostHttpsPort,hostSshPort:$hostSshPort,
-        hostPgAdminPort:$hostPgAdminPort}' \
+        hostPgAdminPort:$hostPgAdminPort,hostVitePort:$hostVitePort}' \
       > "${out}/docker.answers.json"
     echo "  Wrote: docker.answers.json"
 }
@@ -453,7 +457,14 @@ NGINX_SSL_PATH=./docker/nginx/ssl/
 NGINX_SERVER_NAME=${ANSWERS[domain]}
 NGINX_SERVER_ALIAS=${ANSWERS[domainAliases]}
 
+PHP_FPM_HOST_SSH_PORT=${ANSWERS[hostSshPort]}
 PHP_FPM_HOST_LOG_PATH=./docker/logs/php-fpm/
+
+##### VITE
+VITE_DEV_SERVER_PORT=${ANSWERS[hostVitePort]}
+
+##### PGADMIN
+PGADMIN_HOST_PORT=${ANSWERS[hostPgAdminPort]}
 EOF
     cat <<'EOF'
 NOTE: These variables are also required in your .env (outside scope of this framework):
@@ -516,7 +527,7 @@ Key constraints:
 - `memoryLimit` / `uploadMaxFilesize` / `postMaxSize`: `type: string`, `pattern: "^[0-9]+[MG]$"`
 - `phpFpmIncludeNode`: `type: boolean`
 - `nodeServiceBlock`: `type: string`
-- Port fields: `type: integer`, `minimum: 1`, `maximum: 65535`
+- Port fields (`hostHttpPort`, `hostHttpsPort`, `hostSshPort`, `hostPgAdminPort`, `hostVitePort`): `type: integer`, `minimum: 1`, `maximum: 65535`
 - `required`: `["schemaVersion","phpVersion","pgClientVersion","domain"]`
 
 ---
@@ -552,7 +563,8 @@ Key constraints:
   "hostHttpPort": 80,
   "hostHttpsPort": 443,
   "hostSshPort": 2222,
-  "hostPgAdminPort": 8081
+  "hostPgAdminPort": 8081,
+  "hostVitePort": 5173
 }
 ```
 
@@ -621,11 +633,11 @@ bats --tap "${SCRIPT_DIR}/unit" "${SCRIPT_DIR}/integration"
 
 ### Unit: `answers.bats`
 
-`load_answers` reads all 15 fields · optional field defaults applied · exits 1 for missing file · `validate_answers` passes minimal file · passes full file · fails empty `domain` · fails empty `phpVersion` · fails port 0 and port 65536 · fails `phpFpmIncludeNode="yes"` · fails non-existent `nodeServiceBlock` path · `save_answers` writes valid JSON · integer fields are JSON numbers · boolean field is JSON boolean · round-trips via `load_answers`.
+`load_answers` reads all 16 fields · optional field defaults applied (including `hostVitePort // 5173`) · exits 1 for missing file · `validate_answers` passes minimal file · passes full file · fails empty `domain` · fails empty `phpVersion` · fails port 0 and port 65536 · fails `phpFpmIncludeNode="yes"` · fails non-existent `nodeServiceBlock` path · `save_answers` writes valid JSON · integer fields are JSON numbers · boolean field is JSON boolean · round-trips via `load_answers`.
 
 ### Unit: `render_template.bats`
 
-Uses `perl -0777 -pe` (no python3 dependency) · single token replaced · all 10 scalar tokens replaced · non-token content unchanged · empty token collapses blank lines (no triple-blank sequences) · slashes in value pass through · ampersands in value pass through · multi-line block token renders correctly (newlines preserved) · file with no tokens written unchanged.
+Uses `perl -0777 -pe` (no python3 dependency) · single token replaced · all 11 scalar tokens replaced · non-token content unchanged · empty token collapses blank lines (no triple-blank sequences) · slashes in value pass through · ampersands in value pass through · multi-line block token renders correctly (newlines preserved) · file with no tokens written unchanged.
 
 ### Unit: `resolve_blocks.bats`
 
@@ -639,13 +651,13 @@ Uses `perl -0777 -pe` (no python3 dependency) · single token replaced · all 10
 
 Subprocess: `./generate.sh --answers examples/minimal.answers.json --out-dir "$TEST_OUT"`
 
-Exits 0 · all 17 output paths exist (the 16 in functional-spec §6 plus the root `.gitignore`) · `docker.answers.json` is valid JSON · defaults applied (`memoryLimit=256M`, default ports) · generated files have two-line header · invariant files have no header · `sail` and `generate-keys.sh` are executable · `.gitkeep` files exist and are empty · stdout contains `NGINX_SERVER_NAME=myapp.local` · stdout contains DB `NOTE:` reminder.
+Exits 0 · all 17 output paths exist (the 16 in functional-spec §6 plus the root `.gitignore`) · `docker.answers.json` is valid JSON · defaults applied (`memoryLimit=256M`, default ports including `hostVitePort=5173`) · generated files have two-line header · invariant files have no header · `sail` and `generate-keys.sh` are executable · `.gitkeep` files exist and are empty · stdout contains `NGINX_SERVER_NAME=myapp.local` · stdout contains `VITE_DEV_SERVER_PORT=5173` · stdout contains DB `NOTE:` reminder.
 
 ### Integration: `full.bats`
 
 Subprocess: `examples/full.answers.json` (`nodeServiceBlock=builtin`, `phpFpmIncludeNode=false`)
 
-Exits 0 · `docker-compose.yml` contains `node:20-alpine` · no triple blank lines · Dockerfile does NOT contain `nodejs apt` line · no unsubstituted `{{HOST_` tokens in any file · `FROM php:8.5-fpm` correct · `memory_limit = 256M` · `date.timezone=America/New_York` · `opcache.jit=tracing` present · `^opcache.enable_cli` absent.
+Exits 0 · `docker-compose.yml` contains `node:20-alpine` · no triple blank lines · Dockerfile does NOT contain `nodejs apt` line · no unsubstituted `{{HOST_` tokens in any file · `FROM php:8.5-fpm` correct · `memory_limit = 256M` · `date.timezone=America/New_York` · `opcache.jit=tracing` present · `^opcache.enable_cli` absent · stdout contains `VITE_DEV_SERVER_PORT=5173` · `docker-compose.yml` contains `${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}`.
 
 ### Integration: `node_options.bats`
 

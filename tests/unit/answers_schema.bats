@@ -16,10 +16,10 @@ setup() {
     [ "$(jq -r '.type' "$SCHEMA")" = "object" ]
 }
 
-@test "schema defines exactly the 15 answer fields" {
+@test "schema defines exactly the 16 answer fields" {
     run jq -r '.properties | keys | join(" ")' "$SCHEMA"
     [ "$status" -eq 0 ]
-    [ "$output" = "domain domainAliases hostHttpPort hostHttpsPort hostPgAdminPort hostSshPort memoryLimit nodeServiceBlock pgClientVersion phpFpmIncludeNode phpVersion postMaxSize schemaVersion timezone uploadMaxFilesize" ]
+    [ "$output" = "domain domainAliases hostHttpPort hostHttpsPort hostPgAdminPort hostSshPort hostVitePort memoryLimit nodeServiceBlock pgClientVersion phpFpmIncludeNode phpVersion postMaxSize schemaVersion timezone uploadMaxFilesize" ]
 }
 
 @test "required lists the four mandatory fields" {
@@ -64,7 +64,8 @@ setup() {
 }
 
 @test "port fields are integers 1..65535" {
-    for f in hostHttpPort hostHttpsPort hostSshPort hostPgAdminPort; do
+    [ "$(jq -r '.properties.hostVitePort.default' "$SCHEMA")" = "5173" ]
+    for f in hostHttpPort hostHttpsPort hostSshPort hostPgAdminPort hostVitePort; do
         [ "$(jq -r ".properties.${f}.type" "$SCHEMA")" = "integer" ]
         [ "$(jq -r ".properties.${f}.minimum" "$SCHEMA")" = "1" ]
         [ "$(jq -r ".properties.${f}.maximum" "$SCHEMA")" = "65535" ]

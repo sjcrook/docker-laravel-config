@@ -2,6 +2,66 @@
 
 Status: Approved
 
+## Proposal (revision 7, 2026-11-09)
+
+Change planning against the approved revision 6 snapshot. Two independent changes were made to the specs:
+
+1. **Vite dev server port (`hostVitePort`):** A new answer-file field, env var (`VITE_DEV_SERVER_PORT`), and Docker Compose port mapping (`${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}` on php-fpm) are needed throughout `generate.sh`, `templates/env.docker`, `templates/docker-compose.yml`, `schema/answers.schema.json`, and `examples/full.answers.json`.
+
+2. **`sail` TTY detection:** The invariant `templates/sail` script needs `TTY_FLAG=""` / `[ -t 0 ] && TTY_FLAG="-t"` logic added so Ctrl+C propagates to Vite/npm inside the container while still working in non-interactive callers.
+
+**What must change (Vite port — T038):**
+
+1. `generate.sh` `load_answers()`: add `ANSWERS[hostVitePort]=$(jq -r '.hostVitePort // 5173' "$file")`.
+2. `generate.sh` `validate_answers()`: add `hostVitePort` to the port-validation loop (currently `for field in hostHttpPort hostHttpsPort hostSshPort hostPgAdminPort`).
+3. `generate.sh` `interactive_prompts()`: add `prompt_port "Host Vite dev server port" "5173"; ANSWERS[hostVitePort]="$REPLY_VALUE"`.
+4. `generate.sh` `export_tokens()`: add `export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"`.
+5. `generate.sh` `save_answers()`: add `--argjson hostVitePort "${ANSWERS[hostVitePort]}"` and `hostVitePort:$hostVitePort` to the jq object.
+6. `generate.sh` `print_env_fragment()`: add `export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"` to the subshell.
+7. `templates/env.docker`: add `##### VITE` section with `VITE_DEV_SERVER_PORT={{HOST_VITE_PORT}}` (before `##### PGADMIN`).
+8. `templates/docker-compose.yml`: add `- "${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}"` to the php-fpm ports block.
+9. `schema/answers.schema.json`: add `hostVitePort` property (integer, min 1, max 65535, default 5173).
+10. `examples/full.answers.json`: add `"hostVitePort": 5173`.
+11. `tests/unit/answers.bats`: update "reads all 14 value fields" test name → 15; add `[ "${ANSWERS[hostVitePort]}" = "5173" ]`; update "optional field defaults applied" to assert `hostVitePort` defaults to 5173; update `save_answers: integer fields are JSON numbers` jq array to include `hostVitePort`; update tech spec comment in test header.
+12. `tests/unit/env_docker_template.bats`: update "uses exactly the six tokens" → seven; add `{{HOST_VITE_PORT}}` to expected set; add `grep -qxF 'VITE_DEV_SERVER_PORT={{HOST_VITE_PORT}}'` to "token-driven" test.
+13. `tests/unit/top_level_templates.bats`: update "all four host ports" → five; add `grep -qF '"${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}"'`; update "renders to YAML" to assert env-var string survives.
+14. `tests/unit/render_template.bats`: update "all 10 scalar tokens" → 11; add `{{HOST_VITE_PORT}}` to src string and `5173` to expected output.
+15. `tests/integration/minimal.bats`: add `[ "$(jq -r '.hostVitePort' ...)" = "5173" ]` to the defaults test; add stdout assertion for `VITE_DEV_SERVER_PORT=5173`.
+16. `tests/integration/full.bats`: add `grep -qF 'VITE_DEV_SERVER_PORT=5173'` and `grep -qF '"${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}"'` assertions.
+17. `tests/unit/export_tokens.bats` (if it exists, otherwise covered by `render_template.bats`): add `TOKEN_HOST_VITE_PORT` assertion.
+
+**What must change (sail TTY — T039):**
+
+1. `templates/sail`: add the four TTY-detection lines before the `docker exec` call; update the `docker exec` call from `-i` to `-i $TTY_FLAG`.
+2. `tests/unit/sail.bats` (new): test that `templates/sail` contains the expected TTY detection pattern and the updated `docker exec` invocation.
+
+**Note on T037:** `docs/tasks.md` already shows T037 as `✅ Done · 2026-11-08`; code inspection confirms the implementation is complete. The `docs/planning/tasks.md` snapshot was stale (showed `🔲 Todo`). The snapshot will be updated to match on approval.
+
+**Tasks:** Add T038 (Vite port) and T039 (sail TTY detection). No supersessions.
+
+---
+
+## Requirement reconciliation (revision 7)
+
+| Requirement | Existing task IDs | Coverage or mismatch | New task IDs or blocker |
+|---|---|---|---|
+| `hostVitePort` answer-file field, `VITE_DEV_SERVER_PORT` env var, `${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}` compose port on php-fpm (func §4.1, §6, §8.1; tech §7, §8, §11, §14, §15, §17, §18) | None | **Missing.** No implementation or test evidence. `generate.sh` has no `hostVitePort`. `templates/env.docker` has no `VITE_DEV_SERVER_PORT`. `templates/docker-compose.yml` has no Vite port. | T038 |
+| `sail` TTY detection: `[ -t 0 ] && TTY_FLAG="-t"` / `docker exec -i $TTY_FLAG` (func §8.9; tech §16 invariant copy) | None | **Missing.** `templates/sail` still uses `docker exec -i` with no TTY flag. No test covers the TTY detection logic. | T039 |
+| T037 (SSH + pgAdmin port env-var fix) status in `docs/tasks.md` | T037 (✅ Done · 2026-11-08) | No mismatch — `docs/tasks.md` already shows Done. `docs/planning/tasks.md` snapshot was stale (showed Todo); will be updated to match on approval. | — |
+| All other requirements (T001–T036) | T001–T036 | No mismatch identified — all Done. | — |
+
+## Pending dispositions and questions
+
+None. No supersessions.
+
+**Stale handoff:** `docs/handoff.md` says "No tasks are open — T001–T037 all Done." It needs a separate `/handoff` update to list T038 and T039 under Next before implementation begins.
+
+## Approval
+
+**Developer explicitly approved revision 7 on 2026-11-09** (add T038: Vite dev server port `hostVitePort` throughout generator/templates/tests; add T039: TTY detection in `templates/sail` with new `tests/unit/sail.bats`; no supersessions). The planner updated `docs/planning/tasks.md`, `docs/planning/functional-spec.md`, and `docs/planning/technical-spec.md` to match the current source documents. The planner compared key changed sections by reading: `tasks.md` rows T037–T039; `functional-spec.md` §2, §4.1, §4.2, §5.3, §6, §7, §8.1, §8.9, §13; `technical-spec.md` §7, §8, §11, §14, §15, §17, §18, §20 — all match. The planner role has no shell, so a full byte-level diff was not run.
+
+---
+
 ## Proposal (revision 6, 2026-11-08)
 
 Change planning against the approved revision 5 snapshot. Same root cause as T036: `{{HOST_SSH_PORT}}` and `{{HOST_PGADMIN_PORT}}` are still baked in as literal integers at generation time in `templates/docker-compose.yml`. Neither `PHP_FPM_HOST_SSH_PORT` nor `PGADMIN_HOST_PORT` exists in `templates/env.docker`, so there is no way to change those ports post-generation by editing `.env`.

@@ -10,8 +10,8 @@ setup() {
     [ -f "$ENVT" ]
 }
 
-@test "env.docker: uses exactly the six tokens" {
-    [ "$(grep -oE '\{\{[A-Z_]+\}\}' "$ENVT" | LC_ALL=C sort -u)" = "$(printf '{{HOST_HTTPS_PORT}}\n{{HOST_HTTP_PORT}}\n{{HOST_PGADMIN_PORT}}\n{{HOST_SSH_PORT}}\n{{NGINX_SERVER_ALIAS}}\n{{NGINX_SERVER_NAME}}' | LC_ALL=C sort -u)" ]
+@test "env.docker: uses exactly the seven tokens" {
+    [ "$(grep -oE '\{\{[A-Z_]+\}\}' "$ENVT" | LC_ALL=C sort -u)" = "$(printf '{{HOST_HTTPS_PORT}}\n{{HOST_HTTP_PORT}}\n{{HOST_PGADMIN_PORT}}\n{{HOST_SSH_PORT}}\n{{HOST_VITE_PORT}}\n{{NGINX_SERVER_ALIAS}}\n{{NGINX_SERVER_NAME}}' | LC_ALL=C sort -u)" ]
 }
 
 @test "env.docker: token-driven port and nginx variables" {
@@ -19,6 +19,7 @@ setup() {
     grep -qxF 'NGINX_HOST_HTTPS_PORT={{HOST_HTTPS_PORT}}' "$ENVT"
     grep -qxF 'PHP_FPM_HOST_SSH_PORT={{HOST_SSH_PORT}}' "$ENVT"
     grep -qxF 'PGADMIN_HOST_PORT={{HOST_PGADMIN_PORT}}' "$ENVT"
+    grep -qxF 'VITE_DEV_SERVER_PORT={{HOST_VITE_PORT}}' "$ENVT"
     grep -qxF 'NGINX_SERVER_NAME={{NGINX_SERVER_NAME}}' "$ENVT"
     grep -qxF 'NGINX_SERVER_ALIAS={{NGINX_SERVER_ALIAS}}' "$ENVT"
 }

@@ -21,7 +21,8 @@ tokens_in() {
     for s in pgadmin postgres nginx php-fpm; do grep -qxF "    ${s}:" "$COMPOSE"; done
 }
 
-@test "compose: all four host ports use Docker Compose env vars" {
+@test "compose: all five host ports use Docker Compose env vars" {
+    grep -qF '"${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}"' "$COMPOSE"
     grep -qF '"${PGADMIN_HOST_PORT}:80"' "$COMPOSE"
     grep -qF '"${NGINX_HOST_HTTPS_PORT}:443"' "$COMPOSE"
     grep -qF '"${NGINX_HOST_HTTP_PORT}:80"' "$COMPOSE"
@@ -62,6 +63,7 @@ tokens_in() {
     [[ "$out" == *'${NGINX_HOST_HTTPS_PORT}:443'* ]]
     [[ "$out" == *'${PHP_FPM_HOST_SSH_PORT}:22'* ]]
     [[ "$out" == *'${PGADMIN_HOST_PORT}:80'* ]]
+    [[ "$out" == *'${VITE_DEV_SERVER_PORT}:${VITE_DEV_SERVER_PORT}'* ]]
     [[ "$out" == *$'    node:\n        image: node:20-alpine'* ]]
     ! grep -P '\t' <<<"$out"
 }

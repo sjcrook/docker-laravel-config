@@ -20,7 +20,7 @@ setup() {
 }
 
 @test "sail: docker exec into the Laravel dir with the dummy \"\$@\" pattern" {
-    grep -qF 'docker exec -i -w /var/www/laravel/current "$CONTAINER_NAME"' "$SAIL"
+    grep -qF 'docker exec -i $TTY_FLAG -w /var/www/laravel/current "$CONTAINER_NAME"' "$SAIL"
     grep -qF "bash -c 'set -x; exec \"\$@\"' dummy \"\$@\"" "$SAIL"
 }
 

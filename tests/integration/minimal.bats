@@ -55,6 +55,7 @@ teardown() {
     [ "$(jq -r '.hostHttpsPort' "${TEST_OUT}/docker.answers.json")" = "443" ]
     [ "$(jq -r '.hostSshPort' "${TEST_OUT}/docker.answers.json")" = "2222" ]
     [ "$(jq -r '.hostPgAdminPort' "${TEST_OUT}/docker.answers.json")" = "8081" ]
+    [ "$(jq -r '.hostVitePort' "${TEST_OUT}/docker.answers.json")" = "5173" ]
 }
 
 @test "minimal: generated files have two-line header" {
@@ -90,6 +91,11 @@ teardown() {
 @test "minimal: stdout contains NGINX_SERVER_NAME=myapp.local" {
     run "${REPO_ROOT}/generate.sh" --answers "${REPO_ROOT}/examples/minimal.answers.json" --out-dir "${TEST_OUT}"
     [[ "$output" == *"NGINX_SERVER_NAME=myapp.local"* ]]
+}
+
+@test "minimal: stdout contains VITE_DEV_SERVER_PORT=5173" {
+    run "${REPO_ROOT}/generate.sh" --answers "${REPO_ROOT}/examples/minimal.answers.json" --out-dir "${TEST_OUT}"
+    [[ "$output" == *"VITE_DEV_SERVER_PORT=5173"* ]]
 }
 
 @test "minimal: stdout contains DB NOTE: reminder" {
