@@ -84,7 +84,7 @@ RUN mkdir -p /var/www/.config/ngrok && chown -R www-data:www-data /var/www/.conf
 
 # SSH server so that Tinkerwell can connect in (sshd settings belong in sshd_config.d)
 RUN mkdir -p /var/run/sshd
-RUN useradd -m -s /bin/bash devuser && echo 'devuser:password' | chpasswd
+RUN useradd -m -s /bin/bash {{PHP_FPM_SSH_USER}} && echo '{{PHP_FPM_SSH_USER}}:{{PHP_FPM_SSH_PASSWORD}}' | chpasswd
 RUN printf 'PasswordAuthentication yes\nPermitRootLogin no\n' > /etc/ssh/sshd_config.d/10-laravel-dev.conf
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

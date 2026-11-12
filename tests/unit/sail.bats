@@ -29,3 +29,19 @@ setup() {
 @test "sail tty: container name derived via basename \"\$PWD\"" {
     grep -qF 'basename "$PWD"' "$SAIL"
 }
+
+@test "sail tty: SSH path uses sshpass with PHP_FPM_SSH_PASSWORD variable" {
+    grep -qF 'sshpass -p "$PHP_FPM_SSH_PASSWORD"' "$SAIL"
+}
+
+@test "sail tty: SSH path passes TTY_FLAG to ssh" {
+    grep -qF 'ssh $TTY_FLAG' "$SAIL"
+}
+
+@test "sail tty: SSH path connects to host.docker.internal" {
+    grep -qF 'host.docker.internal' "$SAIL"
+}
+
+@test "sail tty: docker availability check gates both paths" {
+    grep -qF 'command -v docker >/dev/null 2>&1' "$SAIL"
+}

@@ -126,6 +126,8 @@ load_answers() {
     ANSWERS[hostSshPort]=$(        jq -r '.hostSshPort // 2222'            "$file")
     ANSWERS[hostPgAdminPort]=$(    jq -r '.hostPgAdminPort // 8081'        "$file")
     ANSWERS[hostVitePort]=$(       jq -r '.hostVitePort // 5173'           "$file")
+    ANSWERS[phpFpmSshUser]=$(      jq -r '.phpFpmSshUser // "devuser"'     "$file")
+    ANSWERS[phpFpmSshPassword]=$(  jq -r '.phpFpmSshPassword // "password"' "$file")
 }
 
 validate_answers() {
@@ -162,6 +164,15 @@ validate_answers() {
         echo "ERROR: phpFpmIncludeNode must be true or false (got: $v)"
         exit 1
     fi
+
+    if [[ -z "${ANSWERS[phpFpmSshUser]}" || "${ANSWERS[phpFpmSshUser]}" == "null" ]]; then
+        echo "ERROR: phpFpmSshUser must not be empty"
+        exit 1
+    fi
+    if [[ -z "${ANSWERS[phpFpmSshPassword]}" || "${ANSWERS[phpFpmSshPassword]}" == "null" ]]; then
+        echo "ERROR: phpFpmSshPassword must not be empty"
+        exit 1
+    fi
 }
 
 save_answers() {
@@ -184,6 +195,8 @@ save_answers() {
       --argjson hostSshPort      "${ANSWERS[hostSshPort]}" \
       --argjson hostPgAdminPort  "${ANSWERS[hostPgAdminPort]}" \
       --argjson hostVitePort     "${ANSWERS[hostVitePort]}" \
+      --arg     phpFpmSshUser    "${ANSWERS[phpFpmSshUser]}" \
+      --arg     phpFpmSshPassword "${ANSWERS[phpFpmSshPassword]}" \
       '{schemaVersion:$schemaVersion,phpVersion:$phpVersion,
         pgClientVersion:$pgClientVersion,domain:$domain,
         domainAliases:$domainAliases,memoryLimit:$memoryLimit,
@@ -191,7 +204,8 @@ save_answers() {
         timezone:$timezone,phpFpmIncludeNode:$phpFpmIncludeNode,
         nodeServiceBlock:$nodeServiceBlock,hostHttpPort:$hostHttpPort,
         hostHttpsPort:$hostHttpsPort,hostSshPort:$hostSshPort,
-        hostPgAdminPort:$hostPgAdminPort,hostVitePort:$hostVitePort}' \
+        hostPgAdminPort:$hostPgAdminPort,hostVitePort:$hostVitePort,
+        phpFpmSshUser:$phpFpmSshUser,phpFpmSshPassword:$phpFpmSshPassword}' \
       > "${out}/docker.answers.json"
     echo "  Wrote: docker.answers.json"
 }
@@ -287,6 +301,9 @@ interactive_prompts() {
     prompt_port "Host pgAdmin port" "8081";   ANSWERS[hostPgAdminPort]="$REPLY_VALUE"
     prompt_port "Host Vite dev server port" "5173"; ANSWERS[hostVitePort]="$REPLY_VALUE"
 
+    prompt_value "php-fpm SSH username" "devuser";   ANSWERS[phpFpmSshUser]="$REPLY_VALUE"
+    prompt_value "php-fpm SSH password" "password";  ANSWERS[phpFpmSshPassword]="$REPLY_VALUE"
+
     # Persist immediately, before any file is generated (tech §7).
     save_answers "$OUT_DIR"
 }
@@ -305,6 +322,8 @@ export_tokens() {
     export TOKEN_HOST_SSH_PORT="${ANSWERS[hostSshPort]}"
     export TOKEN_HOST_PGADMIN_PORT="${ANSWERS[hostPgAdminPort]}"
     export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"
+    export TOKEN_PHP_FPM_SSH_USER="${ANSWERS[phpFpmSshUser]}"
+    export TOKEN_PHP_FPM_SSH_PASSWORD="${ANSWERS[phpFpmSshPassword]}"
 }
 
 # render_template <src> <dst> — replace every {{TOKEN}} with $TOKEN_<TOKEN>.
@@ -464,6 +483,8 @@ print_env_fragment() {
         export TOKEN_HOST_VITE_PORT="${ANSWERS[hostVitePort]}"
         export TOKEN_NGINX_SERVER_NAME="${ANSWERS[domain]}"
         export TOKEN_NGINX_SERVER_ALIAS="${ANSWERS[domainAliases]}"
+        export TOKEN_PHP_FPM_SSH_USER="${ANSWERS[phpFpmSshUser]}"
+        export TOKEN_PHP_FPM_SSH_PASSWORD="${ANSWERS[phpFpmSshPassword]}"
         render_template "${TEMPLATES_DIR}/env.docker" "$tmp"
     )
     echo ""

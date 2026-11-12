@@ -17,8 +17,8 @@ tokens_in() {
     grep -qxF 'FROM php:{{PHP_VERSION}}-fpm' "${FPM_DIR}/Dockerfile"
 }
 
-@test "php-fpm Dockerfile: uses exactly the three tokens PHP_VERSION, PG_CLIENT_VERSION, NODE_APT_BLOCK" {
-    [ "$(tokens_in "${FPM_DIR}/Dockerfile")" = "$(printf '{{NODE_APT_BLOCK}}\n{{PG_CLIENT_VERSION}}\n{{PHP_VERSION}}')" ]
+@test "php-fpm Dockerfile: uses exactly the five tokens PHP_VERSION, PG_CLIENT_VERSION, NODE_APT_BLOCK, PHP_FPM_SSH_USER, PHP_FPM_SSH_PASSWORD" {
+    [ "$(tokens_in "${FPM_DIR}/Dockerfile")" = "$(printf '{{NODE_APT_BLOCK}}\n{{PG_CLIENT_VERSION}}\n{{PHP_FPM_SSH_PASSWORD}}\n{{PHP_FPM_SSH_USER}}\n{{PHP_VERSION}}')" ]
 }
 
 @test "php-fpm Dockerfile: installs postgresql-client-{{PG_CLIENT_VERSION}}" {
@@ -98,8 +98,19 @@ tokens_in() {
     [ "$status" -eq 1 ]
 }
 
-@test "php-fpm Dockerfile: leaves no tokens once all three are substituted" {
-    out="$(sed -e 's/{{PHP_VERSION}}/8.5/g' -e 's/{{PG_CLIENT_VERSION}}/18/g' -e '/^{{NODE_APT_BLOCK}}$/d' "${FPM_DIR}/Dockerfile")"
+@test "php-fpm Dockerfile: useradd and chpasswd use {{PHP_FPM_SSH_USER}} and {{PHP_FPM_SSH_PASSWORD}} tokens" {
+    grep -qF "useradd -m -s /bin/bash {{PHP_FPM_SSH_USER}}" "${FPM_DIR}/Dockerfile"
+    grep -qF "{{PHP_FPM_SSH_USER}}:{{PHP_FPM_SSH_PASSWORD}}" "${FPM_DIR}/Dockerfile"
+    grep -qF "chpasswd" "${FPM_DIR}/Dockerfile"
+    # Ensure no hardcoded devuser or password remain
+    run grep -F 'devuser' "${FPM_DIR}/Dockerfile"
+    [ "$status" -eq 1 ]
+}
+
+@test "php-fpm Dockerfile: leaves no tokens once all five are substituted" {
+    out="$(sed -e 's/{{PHP_VERSION}}/8.5/g' -e 's/{{PG_CLIENT_VERSION}}/18/g' -e '/^{{NODE_APT_BLOCK}}$/d' \
+              -e 's/{{PHP_FPM_SSH_USER}}/devuser/g' -e 's/{{PHP_FPM_SSH_PASSWORD}}/password/g' \
+              "${FPM_DIR}/Dockerfile")"
     [[ "$out" != *'{{'* ]]
     [[ "$out" == *'FROM php:8.5-fpm'* ]]
     [[ "$out" == *'postgresql-client-18'* ]]

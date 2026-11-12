@@ -6,10 +6,22 @@
 #   ./sail php artisan tinker
 #   ./sail composer require vendor/package
 #   ./sail php artisan queue:work
+#
+# When docker is not available (e.g. inside a dev container), sail falls back to
+# SSH via sshpass using the credentials in the project's .env file. sshpass must
+# be installed in the dev container environment (see dev-container-config).
 
-# Derive the container name from the current directory name (Docker Compose project name).
-# basename "$PWD" is POSIX-portable (works on bash, zsh, Linux, macOS, Git Bash, WSL).
-CONTAINER_NAME="$(basename "$PWD")-php-fpm-1"
+# Read SSH connection values from .env in the project root.
+# Uses a simple grep-based parse: does not source .env (avoids side-effects).
+# Falls back to the defaults baked into the php-fpm image if the variables are absent.
+_env_get() {
+    local key="$1" default="$2" val
+    val="$(grep -m1 "^${key}=" .env 2>/dev/null | cut -d= -f2- | tr -d '\r')"
+    printf '%s' "${val:-$default}"
+}
+PHP_FPM_SSH_PORT="$(_env_get PHP_FPM_HOST_SSH_PORT 2222)"
+PHP_FPM_SSH_USER="$(_env_get PHP_FPM_SSH_USER devuser)"
+PHP_FPM_SSH_PASSWORD="$(_env_get PHP_FPM_SSH_PASSWORD password)"
 
 # Allocate a TTY only when sail itself is running in a terminal.
 # With -t, Ctrl+C sends SIGINT into the container's process group,
@@ -18,5 +30,32 @@ CONTAINER_NAME="$(basename "$PWD")-php-fpm-1"
 TTY_FLAG=""
 [ -t 0 ] && TTY_FLAG="-t"
 
-docker exec -i $TTY_FLAG -w /var/www/laravel/current "$CONTAINER_NAME" \
-  bash -c 'set -x; exec "$@"' dummy "$@"
+if command -v docker >/dev/null 2>&1; then
+    # --- docker exec path (normal: docker is available) ---
+    # Derive the container name from the current directory name (Docker Compose project name).
+    # basename "$PWD" is POSIX-portable (works on bash, zsh, Linux, macOS, Git Bash, WSL).
+    CONTAINER_NAME="$(basename "$PWD")-php-fpm-1"
+
+    docker exec -i $TTY_FLAG -w /var/www/laravel/current "$CONTAINER_NAME" \
+      bash -c 'set -x; exec "$@"' dummy "$@"
+else
+    # --- SSH path (fallback: no docker binary, e.g. inside a dev container) ---
+    # Serialise $@ into a safely-quoted remote command so multi-word args and
+    # special characters survive the SSH channel.
+    CMD="cd /var/www/laravel/current"
+    for arg in "$@"; do
+        CMD="$CMD $(printf '%q' "$arg")"
+    done
+
+    # sshpass supplies the password non-interactively.
+    # -o StrictHostKeyChecking=no / UserKnownHostsFile=/dev/null: local dev only —
+    # the container host key changes on every rebuild.
+    sshpass -p "$PHP_FPM_SSH_PASSWORD" \
+      ssh $TTY_FLAG \
+        -p "$PHP_FPM_SSH_PORT" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        -o LogLevel=ERROR \
+        "${PHP_FPM_SSH_USER}@host.docker.internal" \
+        "$CMD"
+fi

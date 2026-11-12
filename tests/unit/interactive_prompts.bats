@@ -24,7 +24,7 @@ blanks() { local i; for ((i=0;i<$1;i++)); do printf '%s' '\n'; done; }
 
 @test "interactive_prompts: Enter accepts all defaults (domain supplied)" {
     set -e
-    run_prompts "\n\nmyapp.test\n$(blanks 11)"
+    run_prompts "\n\nmyapp.test\n$(blanks 13)"
     [ "${ANSWERS[phpVersion]}" = "8.5" ]
     [ "${ANSWERS[pgClientVersion]}" = "18" ]
     [ "${ANSWERS[domain]}" = "myapp.test" ]
@@ -40,11 +40,13 @@ blanks() { local i; for ((i=0;i<$1;i++)); do printf '%s' '\n'; done; }
     [ "${ANSWERS[hostSshPort]}" = "2222" ]
     [ "${ANSWERS[hostPgAdminPort]}" = "8081" ]
     [ "${ANSWERS[hostVitePort]}" = "5173" ]
+    [ "${ANSWERS[phpFpmSshUser]}" = "devuser" ]
+    [ "${ANSWERS[phpFpmSshPassword]}" = "password" ]
 }
 
 @test "interactive_prompts: prompts are asked in the documented order" {
     set -e
-    run_prompts '8.4\n17\nmyapp.test\nwww.myapp.test\n512M\n32M\nUTC\ny\nbuiltin\n8080\n8443\n2200\n8082\n5174\n'
+    run_prompts '8.4\n17\nmyapp.test\nwww.myapp.test\n512M\n32M\nUTC\ny\nbuiltin\n8080\n8443\n2200\n8082\n5174\nsailuser\nsailpass\n'
     [ "${ANSWERS[phpVersion]}" = "8.4" ]
     [ "${ANSWERS[pgClientVersion]}" = "17" ]
     [ "${ANSWERS[domain]}" = "myapp.test" ]
@@ -60,35 +62,37 @@ blanks() { local i; for ((i=0;i<$1;i++)); do printf '%s' '\n'; done; }
     [ "${ANSWERS[hostSshPort]}" = "2200" ]
     [ "${ANSWERS[hostPgAdminPort]}" = "8082" ]
     [ "${ANSWERS[hostVitePort]}" = "5174" ]
+    [ "${ANSWERS[phpFpmSshUser]}" = "sailuser" ]
+    [ "${ANSWERS[phpFpmSshPassword]}" = "sailpass" ]
 }
 
 @test "interactive_prompts: domain loops until non-empty" {
     set -e
-    run_prompts "\n\n\n\nmyapp.test\n$(blanks 11)"
+    run_prompts "\n\n\n\nmyapp.test\n$(blanks 13)"
     [ "${ANSWERS[domain]}" = "myapp.test" ]
 }
 
 @test "interactive_prompts: phpFpmIncludeNode y/Y -> true, n/N/empty -> false" {
     set -e
-    run_prompts "\n\na.test\n$(blanks 4)Y\n$(blanks 6)"
+    run_prompts "\n\na.test\n$(blanks 4)Y\n$(blanks 8)"
     [ "${ANSWERS[phpFpmIncludeNode]}" = "true" ]
-    run_prompts "\n\na.test\n$(blanks 4)n\n$(blanks 6)"
+    run_prompts "\n\na.test\n$(blanks 4)n\n$(blanks 8)"
     [ "${ANSWERS[phpFpmIncludeNode]}" = "false" ]
-    run_prompts "\n\na.test\n$(blanks 4)N\n$(blanks 6)"
+    run_prompts "\n\na.test\n$(blanks 4)N\n$(blanks 8)"
     [ "${ANSWERS[phpFpmIncludeNode]}" = "false" ]
 }
 
 @test "interactive_prompts: nodeServiceBlock=path asks for a path and validates it exists" {
     set -e
     echo "  node:" > "$TMP/node.yml"
-    run_prompts "\n\na.test\n$(blanks 5)path\nmissing.yml\nnode.yml\n$(blanks 5)"
+    run_prompts "\n\na.test\n$(blanks 5)path\nmissing.yml\nnode.yml\n$(blanks 7)"
     [ "${ANSWERS[nodeServiceBlock]}" = "node.yml" ]
     [ "${ANSWERS[hostHttpPort]}" = "80" ]
 }
 
 @test "interactive_prompts: ports and node flag are bare JSON values in saved file" {
     set -e
-    run_prompts "\n\na.test\n$(blanks 6)9000\n$(blanks 4)"
+    run_prompts "\n\na.test\n$(blanks 6)9000\n$(blanks 6)"
     [ "$(jq -r '.hostHttpPort | type' "$TMP/docker.answers.json")" = "number" ]
     [ "$(jq -r '.hostHttpPort' "$TMP/docker.answers.json")" = "9000" ]
     [ "$(jq -r '.phpFpmIncludeNode | type' "$TMP/docker.answers.json")" = "boolean" ]
@@ -96,7 +100,7 @@ blanks() { local i; for ((i=0;i<$1;i++)); do printf '%s' '\n'; done; }
 
 @test "interactive_prompts: calls save_answers and round-trips via load_answers" {
     set -e
-    run_prompts "\n\na.test\nwww.a.test\n$(blanks 10)"
+    run_prompts "\n\na.test\nwww.a.test\n$(blanks 12)"
     [ -f "$TMP/docker.answers.json" ]
     declare -A saved
     local k

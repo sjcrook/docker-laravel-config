@@ -91,6 +91,18 @@
       "minimum": 1,
       "maximum": 65535,
       "default": 5173
+    },
+    "phpFpmSshUser": {
+      "description": "Username for the SSH account created in the php-fpm container (used by sail and Tinkerwell).",
+      "type": "string",
+      "minLength": 1,
+      "default": "devuser"
+    },
+    "phpFpmSshPassword": {
+      "description": "Password for the SSH account in the php-fpm container. Changing this requires a container rebuild.",
+      "type": "string",
+      "minLength": 1,
+      "default": "password"
     }
   },
   "required": ["schemaVersion", "phpVersion", "pgClientVersion", "domain"]

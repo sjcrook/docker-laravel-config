@@ -16,10 +16,10 @@ setup() {
     [ "$(jq -r '.type' "$SCHEMA")" = "object" ]
 }
 
-@test "schema defines exactly the 16 answer fields" {
+@test "schema defines exactly the 18 answer fields" {
     run jq -r '.properties | keys | join(" ")' "$SCHEMA"
     [ "$status" -eq 0 ]
-    [ "$output" = "domain domainAliases hostHttpPort hostHttpsPort hostPgAdminPort hostSshPort hostVitePort memoryLimit nodeServiceBlock pgClientVersion phpFpmIncludeNode phpVersion postMaxSize schemaVersion timezone uploadMaxFilesize" ]
+    [ "$output" = "domain domainAliases hostHttpPort hostHttpsPort hostPgAdminPort hostSshPort hostVitePort memoryLimit nodeServiceBlock pgClientVersion phpFpmIncludeNode phpFpmSshPassword phpFpmSshUser phpVersion postMaxSize schemaVersion timezone uploadMaxFilesize" ]
 }
 
 @test "required lists the four mandatory fields" {
@@ -70,4 +70,16 @@ setup() {
         [ "$(jq -r ".properties.${f}.minimum" "$SCHEMA")" = "1" ]
         [ "$(jq -r ".properties.${f}.maximum" "$SCHEMA")" = "65535" ]
     done
+}
+
+@test "phpFpmSshUser is a string with minLength 1 and default devuser" {
+    [ "$(jq -r '.properties.phpFpmSshUser.type' "$SCHEMA")" = "string" ]
+    [ "$(jq -r '.properties.phpFpmSshUser.minLength' "$SCHEMA")" = "1" ]
+    [ "$(jq -r '.properties.phpFpmSshUser.default' "$SCHEMA")" = "devuser" ]
+}
+
+@test "phpFpmSshPassword is a string with minLength 1 and default password" {
+    [ "$(jq -r '.properties.phpFpmSshPassword.type' "$SCHEMA")" = "string" ]
+    [ "$(jq -r '.properties.phpFpmSshPassword.minLength' "$SCHEMA")" = "1" ]
+    [ "$(jq -r '.properties.phpFpmSshPassword.default' "$SCHEMA")" = "password" ]
 }

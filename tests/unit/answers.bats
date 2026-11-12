@@ -14,7 +14,7 @@ teardown() {
 }
 
 # Load an answers file and validate it in the current shell.
-@test "load_answers: reads all 15 value fields from full example" {
+@test "load_answers: reads all 17 value fields from full example" {
     load_answers "${REPO_ROOT}/examples/full.answers.json"
     [ "${ANSWERS[phpVersion]}" = "8.5" ]
     [ "${ANSWERS[pgClientVersion]}" = "18" ]
@@ -31,6 +31,8 @@ teardown() {
     [ "${ANSWERS[hostSshPort]}" = "2222" ]
     [ "${ANSWERS[hostPgAdminPort]}" = "8081" ]
     [ "${ANSWERS[hostVitePort]}" = "5173" ]
+    [ "${ANSWERS[phpFpmSshUser]}" = "devuser" ]
+    [ "${ANSWERS[phpFpmSshPassword]}" = "password" ]
 }
 
 @test "load_answers: optional field defaults applied for minimal example" {
@@ -47,6 +49,8 @@ teardown() {
     [ "${ANSWERS[hostSshPort]}" = "2222" ]
     [ "${ANSWERS[hostPgAdminPort]}" = "8081" ]
     [ "${ANSWERS[hostVitePort]}" = "5173" ]
+    [ "${ANSWERS[phpFpmSshUser]}" = "devuser" ]
+    [ "${ANSWERS[phpFpmSshPassword]}" = "password" ]
 }
 
 @test "load_answers: phpFpmIncludeNode true is loaded as true" {
@@ -206,4 +210,30 @@ teardown() {
     save_answers "$TMP"
     [ "$(jq -r '.memoryLimit' "$TMP/docker.answers.json")" = "256M" ]
     [ "$(jq -r '.hostHttpPort' "$TMP/docker.answers.json")" = "80" ]
+}
+
+@test "validate_answers: fails empty phpFpmSshUser" {
+    load_answers "${REPO_ROOT}/examples/minimal.answers.json"
+    ANSWERS[phpFpmSshUser]=""
+    run validate_answers
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"phpFpmSshUser"* ]]
+}
+
+@test "validate_answers: fails empty phpFpmSshPassword" {
+    load_answers "${REPO_ROOT}/examples/minimal.answers.json"
+    ANSWERS[phpFpmSshPassword]=""
+    run validate_answers
+    [ "$status" -eq 1 ]
+    [[ "$output" == *"phpFpmSshPassword"* ]]
+}
+
+@test "save_answers: phpFpmSshUser and phpFpmSshPassword are written as strings" {
+    set -e
+    load_answers "${REPO_ROOT}/examples/full.answers.json"
+    save_answers "$TMP"
+    [ "$(jq -r '.phpFpmSshUser' "$TMP/docker.answers.json")" = "devuser" ]
+    [ "$(jq -r '.phpFpmSshPassword' "$TMP/docker.answers.json")" = "password" ]
+    [ "$(jq -r '.phpFpmSshUser | type' "$TMP/docker.answers.json")" = "string" ]
+    [ "$(jq -r '.phpFpmSshPassword | type' "$TMP/docker.answers.json")" = "string" ]
 }

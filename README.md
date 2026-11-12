@@ -84,6 +84,25 @@ The `nodeServiceBlock` answer controls an optional one-shot `node` service in `d
 Separately, `phpFpmIncludeNode: true` installs `nodejs` and `npm` in the php-fpm image (needed
 when Composer post-install scripts call node/npm).
 
+## Dev container / no-Docker usage
+
+When `docker` is not available on `PATH` (e.g. inside a VS Code dev container that has no Docker socket), `sail` automatically falls back to running commands over SSH using `sshpass`. The php-fpm container already starts an SSH server on the port mapped by `PHP_FPM_HOST_SSH_PORT`, so no additional container changes are needed.
+
+**Prerequisites**
+
+- `sshpass` must be installed in the dev container image (add it via `dev-container-config`'s apt-packages answer).
+- The dev container must have `host.docker.internal` resolving to the Docker host — this is already true for containers started with `--add-host host.docker.internal:host-gateway` (the default generated devcontainer.json).
+
+**Credentials**
+
+The SSH username and password are set as `generate.sh` answers (`phpFpmSshUser` / `phpFpmSshPassword`, defaulting to `devuser` / `password`). They are written to the project's `.env` file as `PHP_FPM_SSH_USER` and `PHP_FPM_SSH_PASSWORD`, and `sail` reads them from there at runtime.
+
+> **Important:** the credentials are baked into the php-fpm image at build time (`RUN useradd … && chpasswd`). If you change them in `docker.answers.json` and re-run `generate.sh`, you must **rebuild the container** — a plain restart is not enough:
+> ```bash
+> docker compose build php-fpm
+> docker compose up -d php-fpm
+> ```
+
 ## Port conflicts
 
 Host ports are answers: `hostHttpPort` (80), `hostHttpsPort` (443), `hostSshPort` (2222) and
