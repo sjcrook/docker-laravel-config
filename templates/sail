@@ -42,7 +42,7 @@ else
     # --- SSH path (fallback: no docker binary, e.g. inside a dev container) ---
     # Serialise $@ into a safely-quoted remote command so multi-word args and
     # special characters survive the SSH channel.
-    CMD="cd /var/www/laravel/current"
+    CMD="cd /var/www/laravel/current && "
     for arg in "$@"; do
         CMD="$CMD $(printf '%q' "$arg")"
     done
