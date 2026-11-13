@@ -17,15 +17,33 @@ are out of scope (the `sail` script here is an unrelated `docker exec` wrapper).
 
 ## Install
 
+### Developing this repository
+
+This repository uses `ai-session-kit` and `dev-container-config`
+as development dependencies.
+
+To initialise them:
+
+    git submodule update --init --recursive --depth 1
+
+These submodules are not required when using docker-laravel-config
+as a generator in another project as described immediately below.
+
+### Using this repository
+
 From the root of your Laravel project:
 
 ```bash
-git submodule add <this-repo-url> external/docker-laravel-config
-git submodule update --init
+git submodule add --depth 1 <this-repo-url> external/docker-laravel-config
 ```
 
-A fresh clone of a project that already uses the submodule needs
-`git clone --recurse-submodules <url>` (or `git submodule update --init --recursive`).
+A fresh clone of a project that vendors this needs:
+
+```
+git clone <url>
+cd <your-project>
+git submodule update --init --depth 1
+```
 
 ## Usage
 
@@ -58,7 +76,7 @@ Commit `docker.answers.json`, `docker-compose.yml`, `sail`, `docker/` and the su
 ## Updating
 
 ```bash
-git submodule update --remote external/docker-laravel-config
+git submodule update --remote --depth 1 external/docker-laravel-config
 git add external/docker-laravel-config
 git commit -m "chore: update docker-laravel-config submodule"
 
